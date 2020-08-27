@@ -1,0 +1,193 @@
+       01  PART-SUPP-ADDR-PO. 
+           05 PARTS. 
+              10  PART-NUMBER       PIC X(23) VALUE SPACES. 
+               10  PART-NAME         PIC X(14) VALUE SPACES. 
+               10  SPEC-NUMBER       PIC X(07) VALUE SPACES. 
+               10  GOVT-COMML-CODE   PIC X(01) VALUE SPACES. 
+               10  BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES. 
+               10  UNIT-OF-MEASURE   PIC X(03) VALUE SPACES. 
+               10  WEEKS-LEAD-TIME   PIC 9(03) VALUE ZERO. 
+               10  VEHICLE-MAKE      PIC X(03) VALUE SPACES. 
+                    88 CHRYSLER       VALUE 'CHR'. 
+                    88 FORD           VALUE 'FOR'. 
+                    88 GM             VALUE 'GM '. 
+                    88 VOLKSWAGON     VALUE 'VW '. 
+                    88 TOYOTA         VALUE 'TOY'. 
+                    88 JAGUAR         VALUE 'JAG'. 
+                    88 PEUGEOT        VALUE 'PEU'. 
+                    88 BMW            VALUE 'BMW'. 
+               10  VEHICLE-MODEL     PIC X(10) VALUE SPACES. 
+               10  VEHICLE-YEAR      PIC X(04) VALUE '0000'. 
+               10  FILLER            PIC X(14) VALUE SPACES. 
+           05 SUPPLIERS. 
+               10  SUPPLIER-CODE     PIC X(10) VALUE SPACES. 
+               10  SUPPLIER-TYPE     PIC X(01) VALUE SPACES. 
+                    88 SUBCONTRACTOR  VALUE 'S'. 
+                    88 DISTRIBUTOR    VALUE 'D'. 
+                    88 MANUFACTURER   VALUE 'M'. 
+                    88 IMPORTER       VALUE 'I'. 
+               10  SUPPLIER-NAME     PIC X(15) VALUE SPACES. 
+               10  SUPPLIER-PERF     PIC 9(03) VALUE ZERO. 
+               10  SUPPLIER-RATING   PIC X(01) VALUE SPACES. 
+                    88 HIGHEST-QUALITY VALUE '3'. 
+                    88 AVERAGE-QUALITY VALUE '2'. 
+                    88 LOWEST-QUALITY  VALUE '1'. 
+               10  SUPPLIER-STATUS   PIC X(01) VALUE SPACES. 
+                    88 GOVT-COMM       VALUE '1'. 
+                    88 GOVT-ONLY       VALUE '2'. 
+                    88 COMMERCIAL-ONLY VALUE '3'. 
+               10  SUPPLIER-ACT-DATE PIC 9(08) VALUE ZERO. 
+           05 SUPP-ADDRESS OCCURS 3 TIMES INDEXED BY ADDR-IDX. 
+               10 ADDRESS-TYPE      PIC X(01) VALUE SPACES. 
+                  88 ORDER-ADDRESS           VALUE '1'. 
+                  88 SCHED-ADDRESS           VALUE '2'. 
+                  88 REMIT-ADDRESS           VALUE '3'. 
+               10 ADDRESS-1         PIC X(15) VALUE SPACES. 
+               10 ADDRESS-2         PIC X(15) VALUE SPACES. 
+               10 ADDRESS-3         PIC X(15) VALUE SPACES. 
+               10 CITY              PIC X(15) VALUE SPACES. 
+               10 ADDR-STATE        PIC X(02) VALUE SPACES. 
+               10 ZIP-CODE          PIC 9(10) VALUE ZERO. 
+           05 PURCHASE-ORDER OCCURS 3 TIMES INDEXED BY PO-IDX. 
+               10  PO-NUMBER         PIC X(06) VALUE SPACES. 
+               10  BUYER-CODE        PIC X(03) VALUE SPACES. 
+               10  QUANTITY          PIC S9(7) VALUE ZERO. 
+               10  UNIT-PRICE        PIC S9(7)V99 VALUE ZERO. 
+               10  ORDER-DATE        PIC 9(08) VALUE ZERO. 
+               10  DELIVERY-DATE     PIC 9(08) VALUE ZERO. 
+-----------------------------------------------------------------------
+       01  PARTS. 
+           05  PART-NUMBER       PIC X(23) VALUE SPACES. 
+           05  PART-NAME         PIC X(14) VALUE SPACES. 
+           05  SPEC-NUMBER       PIC X(07) VALUE SPACES. 
+           05  GOVT-COMML-CODE   PIC X(01) VALUE SPACES. 
+           05  BLUEPRINT-NUMBER  PIC X(05) VALUE SPACES. 
+           05  UNIT-OF-MEASURE   PIC X(03) VALUE SPACES. 
+           05  WEEKS-LEAD-TIME   PIC S9(04) COMP VALUE ZEROS. 
+           05  VEHICLE-MAKE      PIC X(03) VALUE SPACES. 
+                88 CHRYSLER       VALUE 'CHR'. 
+                88 FORD           VALUE 'FOR'. 
+                88 GM             VALUE 'GM '. 
+                88 VOLKSWAGON     VALUE 'VW '. 
+                88 TOYOTA         VALUE 'TOY'. 
+                88 JAGUAR         VALUE 'JAG'. 
+                88 PEUGEOT        VALUE 'PEU'. 
+                88 BMW            VALUE 'BMW'. 
+           05  VEHICLE-MODEL     PIC X(05) VALUE SPACES. 
+           05  VEHICLE-YEAR      PIC X(04) VALUE '0000'. 
+-----------------------------------------------------------------------
+       01 SUPPLIERS. 
+           05  SUPPLIER-CODE     PIC X(05) VALUE SPACES. 
+           05  SUPPLIER-TYPE     PIC X(01) VALUE SPACES. 
+                88 SUBCONTRACTOR  VALUE 'S'. 
+                88 DISTRIBUTOR    VALUE 'D'. 
+                88 MANUFACTURER   VALUE 'M'. 
+                88 IMPORTER       VALUE 'I'. 
+           05  SUPPLIER-NAME     PIC X(15) VALUE SPACES. 
+           05  SUPPLIER-PERF     PIC 9(03) COMP VALUE ZERO. 
+           05  SUPPLIER-RATING   PIC X(01) VALUE SPACES. 
+                88 HIGHEST-QUALITY VALUE '3'. 
+                88 AVERAGE-QUALITY VALUE '2'. 
+                88 LOWEST-QUALITY  VALUE '1'. 
+           05  SUPPLIER-STATUS   PIC X(01) VALUE SPACES. 
+                88 GOVT-COMM       VALUE '1'. 
+                88 GOVT-ONLY       VALUE '2'. 
+                88 COMMERCIAL-ONLY VALUE '3'. 
+           05  SUPPLIER-ACT-DATE PIC X(08) VALUE SPACES. 
+-----------------------------------------------------------------------
+       01  SUPP-ADDRESS. 
+           05 ADDRESS-TYPE      PIC X(01) VALUE SPACES. 
+              88 ORDER-ADDRESS           VALUE '1'. 
+              88 SCHED-ADDRESS           VALUE '2'. 
+              88 REMIT-ADDRESS           VALUE '3'. 
+           05 ADDRESS-1         PIC X(15) VALUE SPACES. 
+           05 ADDRESS-2         PIC X(15) VALUE SPACES. 
+           05 ADDRESS-3         PIC X(15) VALUE SPACES. 
+           05 CITY              PIC X(15) VALUE SPACES. 
+           05 ADDR-STATE        PIC X(02) VALUE SPACES. 
+           05 ZIP-CODE          PIC X(05) VALUE SPACES. 
+-----------------------------------------------------------------------
+       01  PURCHASE-ORDERS. 
+           05  PO-NUMBER           PIC X(06) VALUE SPACES. 
+           05  BUYER-CODE          PIC X(03) VALUE SPACES. 
+           05  QUANTITY            PIC S9(8) COMP VALUE ZERO. 
+           05  UNIT-PRICE          PIC S9(7)V99 COMP-3 VALUE ZERO. 
+           05  ORDER-DATE          PIC X(08) VALUE SPACES. 
+           05  DELIVERY-DATE       PIC X(08) VALUE SPACES. 
+-----------------------------------------------------------------------
+Alaska          AK  99501   99950 
+Alabama         AL  35004   36925 
+Arkansas        AR  71601   72959 
+Arkansas        AR  75502   75502 
+Arizona         AZ  85001   86556 
+California      CA  90001   96162 
+Colorado        CO  80001   81658 
+Connecticut     CT  06001   06389 
+Connecticut     CT  06401   06928 
+Dist of Colum   DC  20001   20039 
+Dist of Colum   DC  20042   20599 
+Dist of Colum   DC  20799   20799 
+Delaware        DE  19701   19980 
+Florida         FL  32004   34997 
+Georgia         GA  30001   31999 
+Georga          GA  39901   39901 
+Hawaii          HI  96701   96898 
+Iowa            IA  50001   52809 
+Iowa            IA  68119   68120 
+Idaho           ID  83201   83876 
+Illinoi         IL  60001   62999 
+Indiana         IN  46001   47997 
+Kansas          KS  66002   67954 
+Kentucky        KY  40003   42788 
+Louisiana       LA  70001   71232 
+Louisiana       LA  71234   71497 
+Massachusetts   MA  01001   02791 
+Massachusetts   MA  05501   05544 
+Maryland        MD  20331   20331 
+Maryland        MD  20335   20797 
+Maryland        MD  20812   21930 
+Maine           ME  03901   03992 
+Michigan        MI  48001   49971 
+Minnesota       MN  55001   56763 
+kc96 DataMO     MO  63001   65899 
+Mississippi     MS  38601   39776 
+Mississippi     MS  71233   71233 
+Montana         MT  59001   59937 
+North Carolina  NC  27006   28909 
+North Dakota    ND  58001   58856 
+Nebraska        NE  68001   68118 
+Nebraska        NE  68122   69367 
+New Hampshire   NH  03031   03897 
+New Jersey      NJ  07001   08989 
+New Mexico      NM  87001   88441 
+Nevada          NV  88901   89883 
+New York        NY  06390   06390 
+New York        NY  10001   14975 
+Ohio            OH  43001   45999 
+Oklahoma        OK  73001   73199 
+Oklahoma        OK  73401   74966 
+Oregon          OR  97001   97920 
+Pennsylvania    PA  15001   19640 
+Rhode Island    RI  02801   02940 
+South Carolina  SC  29001   29948 
+South Dakota    SD  57001   57799 
+Tennessee       TN  37010   38589 
+Texas           TX  7330    73301 
+Texas           TX  75001   75501 
+Texas           TX  7550    79999 
+Texas           TX  88510   88589 
+Utah            UT  84001   84784 
+Virginia        VA  20040   20041 
+Virginia        VA  20040   20167 
+Virginia        VA  20042   20042 
+Virginia        VA  22001   24658 
+Vermont         VT  50001   05495 
+Vermont         VT  05601   05907 
+Washington      WA  98001   99403 
+Wisconsin       WI  53001   54990 
+West Virginia   WV  24701   26886 
+Wyoming         WY  82001   83128 
+-----------------------------------------------------------------------
+11111-22222-33333-44444Muffler       A-101231BP456xxxxxCM 003CHRTownCxxxxx2015xxxxxxxxxxxxxx23456xxxxxSSubContractor  005332010010111234 West Main Order Dept.                   Any Town       AL359949999921234 West Main Sched Dept.    Attn: Mary     Any Town       AL359949999931234 West Main Remit Dept.    Attn: Bob      Any Town       AL3599499999000001TUR00000010000022952020072520200910000002TUR00000020000015482020072620200903000003TUR00000010001023452020072820201012
+11111-33333-33333-55555Brake Pads    A-101231BP458xxxxxCM 001GM GMC  xxxxx2017xxxxxxxxxxxxxx36981xxxxxDDistributor    0022120150507194 Grove Ave.  Main Office    Attn: Chris    My  Town       AL3599499999294 Grove Ave.  Main Office    Attn: Ted      My  Town       AL3599499999394 Grove Ave.  Main Office    Attn: Susan    My  Town       AL3599499999001025TUR00001000000022952020061320200710001036TUR00002250000015482020072620200803001068TUR00010000000001452020082820201012
+11111-44444-33333-66666Brake Disc    A-101231BP459xxxxxCM 002VW TourExxxxx2008xxxxxxxxxxxxxx78912xxxxxMManufacturer   003112018060717986 Maple ST.                Attn: Mike     My  City       AL359949999927986 Maple ST.                Attn: Mary     My  City       AL359949999937986 Maple ST.                Attn: Matt     My  City       AL3599499999009887URB00000100000322952020051220200623010145URB00002000000126232020060520200715020067URB00010000000001992020070520200901
