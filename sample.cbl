@@ -8,7 +8,7 @@
 
        FILE DIVISION.
        OPEN <FILE NAME>.
-       CLOSE <FILE NAME>.
+       CLOSE <FILE NAME>.111
 
        PROCEDURE DIVISION.
 
