@@ -1,5 +1,5 @@
        01 SUPPLIERS. 
-           05  SUPPLIER-CODE     PIC X(05) VALUE SPACES. 
+           05  SUPPLIER-CODE     PIC X(10) VALUE SPACES. 
            05  SUPPLIER-TYPE     PIC X(01) VALUE SPACES. 
                 88 SUBCONTRACTOR  VALUE 'S'. 
                 88 DISTRIBUTOR    VALUE 'D'. 
