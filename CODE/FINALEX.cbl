@@ -166,8 +166,10 @@
       * From PARTSUPPIN file
            MOVE PARTS  TO PARTS-OUT.
            MOVE SUPPLIERS    TO SUPPLIERS-OUT.
-           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT.
-           MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+      * Subscription Move just for some testing - will be corrected in
+      * the future - FABIO
+           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT(1).
+           MOVE PURCHASE-ORDERS     TO PURCHASE-ORDER-OUT(1).
 
 
        300-Open-Files.
