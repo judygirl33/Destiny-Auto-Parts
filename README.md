@@ -2,6 +2,9 @@
 
 ## Creating the needed Datasets and uploading the files (uses ZOWE)
 
+Replaces `HLQ` with your installation user
+
+```
 zowe files create pds 'HLQ.FINALS.COBOL'
 zowe files create pds 'HLQ.FINALS.COPYLIB'
 zowe files create pds 'HLQ.FINALS.JCL'
@@ -16,3 +19,4 @@ zowe files ul ftds CODE/FINALEX.cbl 'HLQ.FINALS.COBOL(FINALEX)'
 zowe files ul ftds DATA/zipcode.data 'HLQ.FINALS.STATEZIP'
 zowe files ul ftds DATA/.data 'HLQ.FINALS.STATEZIP'
 zowe files ul ftds DATA/sample.data 'Z80643.FINALS.PARTSUPP' 
+```
