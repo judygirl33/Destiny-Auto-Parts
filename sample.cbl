@@ -1,6 +1,7 @@
        IDENTIFICATION DIVISION.
       *SAMPLE CODE FOR GITHUB
        PROGRAM-ID. SAMPLE.
+       AUTHOR. Enterprise Cobol.
 
        ENVIRONMENT DIVISION.
 
