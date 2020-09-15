@@ -5,6 +5,7 @@
       * INSERT HERE WHAT THE PROGRAM DOES
       ******************************************************************
 
+
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.

@@ -20,3 +20,12 @@ zowe files ul ftds DATA/zipcode.data 'HLQ.FINALS.STATEZIP'
 zowe files ul ftds DATA/.data 'HLQ.FINALS.STATEZIP'
 zowe files ul ftds DATA/sample.data 'Z80643.FINALS.PARTSUPP' 
 ```
+
+# Subprograms Authors
+
+| Subprograms |  Author |
+|-:|:-:|
+| Suppliers(SUPPEDIT ) | Guillermo |
+| SupAdress (ADREDIT  ) | Fabio | 
+| Purchase (POEDIT)  | Judy |
+| Part (PARTEDIT) | Ivanna |
