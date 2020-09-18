@@ -2,29 +2,8 @@
        PROGRAM-ID. FINALEX.
       ******************************************************************
       * INSERT HERE WHAT THE PROGRAM DOES
-      *  CHANGE LOG:
-      *  ++++IVANNA ->Changes on 9/16 on the version Fabio saved on 9/15
-      *  In Working Storage, I've added the following variables:
-      *>9/16 variable to determine return code
-      *01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
-      *9/16 counter of errors found in Subprogram PARTSEDIT
-      * 01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
-
-      *In 000-Housekeeping Paragrpaph, I've added the inizialization of
-      * the following variables:
-      *9/16 Initialize the Return-Code and error-counter from subprogram
-      *    INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
-      *In 200-PROCESS-DATA Paragraph, I've added the call of
-      * PARTEDIT SUBPROGRAM:
-      * CALL 'PARTEDIT' USING PARTS-OUT, WS-PARTEDIT-ERRORCOUNTER.
-      * 9/18 Ivanna Initializing counters before reading next record
-      *     INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
-      *9/18 remplacing from MOVE PARTS  TO PARTS-OUT to move to each 05 field
-      *9/18 calling subprogram with 05 variables instead of parts-out.
-      *     CALL 'PARTEDIT' USING PART-NUMBER-OUT,PART-NAME-OUT,
-      *     SPEC-NUMBER-OUT, GOVT-COMML-CODE-OUT, BLUEPRINT-NUMBER-OUT,
-      *     UNIT-OF-MEASURE-OUT, WEEKS-LEAD-TIME-OUT,VEHICLE-MAKE-OUT,
-      *     VEHICLE-MODEL-OUT, VEHICLE-YEAR-OUT,WS-PARTEDIT-ERRORCOUNTER
+      * version copied from Fabio Remote Github on 9/15 plus changes
+      * done by Ivanna on 9/16
       ******************************************************************
 
        ENVIRONMENT DIVISION.
@@ -104,14 +83,14 @@
       * Internal VARIABLE GROUP FOR PART-SUPP-ADDR-PO Copybook
        01  WS-PART-SUPP-ADDR-PO-OUT.
            05 PARTS-OUT.
-               10  PART-NUMBER       PIC X(23) VALUE SPACES.
-               10  PART-NAME         PIC X(14) VALUE SPACES.
-               10  SPEC-NUMBER       PIC X(07) VALUE SPACES.
-               10  GOVT-COMML-CODE   PIC X(01) VALUE SPACES.
-               10  BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES.
-               10  UNIT-OF-MEASURE   PIC X(03) VALUE SPACES.
-               10  WEEKS-LEAD-TIME   PIC 9(03) VALUE ZERO.
-               10  VEHICLE-MAKE      PIC X(03) VALUE SPACES.
+               10  PART-NUMBER-OUT       PIC X(23) VALUE SPACES.
+               10  PART-NAME-OUT         PIC X(14) VALUE SPACES.
+               10  SPEC-NUMBER-OUT       PIC X(07) VALUE SPACES.
+               10  GOVT-COMML-CODE-OUT   PIC X(01) VALUE SPACES.
+               10  BLUEPRINT-NUMBER-OUT  PIC X(10) VALUE SPACES.
+               10  UNIT-OF-MEASURE-OUT   PIC X(03) VALUE SPACES.
+               10  WEEKS-LEAD-TIME-OUT   PIC 9(03) VALUE ZERO.
+               10  VEHICLE-MAKE-OUT      PIC X(03) VALUE SPACES.
                     88 CHRYSLER       VALUE 'CHR'.
                     88 FORD           VALUE 'FOR'.
                     88 GM             VALUE 'GM '.
@@ -120,8 +99,8 @@
                     88 JAGUAR         VALUE 'JAG'.
                     88 PEUGEOT        VALUE 'PEU'.
                     88 BMW            VALUE 'BMW'.
-               10  VEHICLE-MODEL     PIC X(10) VALUE SPACES.
-               10  VEHICLE-YEAR      PIC X(04) VALUE '0000'.
+               10  VEHICLE-MODEL-OUT     PIC X(10) VALUE SPACES.
+               10  VEHICLE-YEAR-OUT     PIC X(04) VALUE '0000'.
                10  FILLER            PIC X(14) VALUE SPACES.
            05 SUPPLIERS-OUT.
                10  SUPPLIER-CODE     PIC X(10) VALUE SPACES.
@@ -165,7 +144,12 @@
       *Counter of records readed from PARTSUPPIN file:
        01 WS-IN-PARTSUPP-CTR               PIC 9(7) VALUE ZERO.
 
-
+      *>9/16 variable to determine return code
+       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
+      *9/16 counter of errors found in Subprogram PARTSEDIT
+       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
+      *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
+       01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
 
        PROCEDURE DIVISION.
 
@@ -196,10 +180,11 @@
 
        200-PROCESS-DATA.
       * From PARTSUPPIN file
-      * MOVE PARTS  TO PARTS-OUT-> omitted to copy 05 fields at the time
-           MOVE SUPPLIERS    TO SUPPLIERS-OUT.
-           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT.
-           MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+      *    MOVE PARTS IN PART-SUPP-ADDR-PO  TO PARTS-OUT.
+      *    MOVE SUPPLIERS IN PART-SUPP-ADDR-PO    TO SUPPLIERS-OUT.
+      *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
+      *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+           DISPLAY '200-PROCESS-DATA'.
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
            MOVE PART-NUMBER IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT IN
            WS-PART-SUPP-ADDR-PO-OUT.
@@ -223,12 +208,14 @@
            VEHICLE-MODEL-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
            MOVE VEHICLE-YEAR IN PART-SUPP-ADDR-PO TO
            VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT
+      *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
+           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT
       *9/16 Added the call of PARTEDIT SUBPROGRAM
-      *9/18 calling subprogram with 05 variables instead of parts-out.
            CALL 'PARTEDIT' USING PART-NUMBER-OUT,PART-NAME-OUT,
            SPEC-NUMBER-OUT, GOVT-COMML-CODE-OUT, BLUEPRINT-NUMBER-OUT,
-           UNIT-OF-MEASURE-OUT, WEEKS-LEAD-TIME-OUT,VEHICLE-MAKE-OUT,
+           UNIT-OF-MEASURE-OUT, WS-WEEKS-LEAD-AUX,VEHICLE-MAKE-OUT,
            VEHICLE-MODEL-OUT, VEHICLE-YEAR-OUT,WS-PARTEDIT-ERRORCOUNTER.
+           DISPLAY WS-PARTEDIT-ERRORCOUNTER.
 
 
        300-Open-Files.
