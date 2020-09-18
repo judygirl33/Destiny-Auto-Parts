@@ -2,6 +2,21 @@
        PROGRAM-ID. FINALEX.
       ******************************************************************
       * INSERT HERE WHAT THE PROGRAM DOES
+      *  CHANGE LOG:
+      *  ++++IVANNA ->Changes on 9/16 on the version Fabio saved on 9/15
+      *  In Working Storage, I've added the following variables:
+      *>9/16 variable to determine return code
+      *01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
+      *9/16 counter of errors found in Subprogram PARTSEDIT
+      * 01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
+
+      *In 000-Housekeeping Paragrpaph, I've added the inizialization of
+      * the following variables:
+      *9/16 Initialize the Return-Code and error-counter from subprogram
+      *    INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
+      *In 200-PROCESS-DATA Paragraph, I've added the call of
+      * PARTEDIT SUBPROGRAM:
+      * CALL 'PARTEDIT' USING PARTS-OUT, WS-PARTEDIT-ERRORCOUNTER.
       ******************************************************************
 
        ENVIRONMENT DIVISION.
@@ -53,6 +68,11 @@
            COPY PRCHSORD. *>PURCHASE-ORDERS Copybook
            COPY SUPADDRS. *>SUPP-ADDRESS Copybook
            COPY SUPPLIER. *>Suppliers Copybook
+      *>9/16 variable to determine return code
+       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
+
+      *9/16 counter of errors found in Subprogram PARTSEDIT
+       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
 
        01 FILE-STATUS-CODES.
       * Here we need to add FILES STATUS CODES of the other output files
@@ -150,6 +170,8 @@
        000-Housekeeping.
       * Initialization Routine
            INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
+      *9/16 Initialize the Return-Code and error-counter from subprogram
+           INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
       * Priming Read
            PERFORM 300-Open-Files.
            PERFORM 400-Read-PARTSUPPIN.
@@ -166,11 +188,10 @@
       * From PARTSUPPIN file
            MOVE PARTS  TO PARTS-OUT.
            MOVE SUPPLIERS    TO SUPPLIERS-OUT.
-      * Subscription Move just for some testing - will be corrected in
-      * the future - FABIO
-           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT(1).
-           MOVE PURCHASE-ORDERS     TO PURCHASE-ORDER-OUT(1).
-
+           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT.
+           MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+      *9/16 invoquing subprogram PARTEDIT
+           CALL 'PARTEDIT' USING PARTS-OUT, WS-PARTEDIT-ERRORCOUNTER.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
