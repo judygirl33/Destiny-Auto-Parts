@@ -147,10 +147,6 @@
       *Counter of records readed from PARTSUPPIN file:
        01 WS-IN-PARTSUPP-CTR               PIC 9(7) VALUE ZERO.
 
-      *>9/16 variable to determine return code
-       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
-      *9/16 counter of errors found in Subprogram PARTSEDIT
-       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
       *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
        01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
       
