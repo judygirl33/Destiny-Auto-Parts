@@ -76,8 +76,11 @@
       * File status key for Output ErrorFile
            05 OUT-ERRORFILE-KEY          PIC X(2).
                 88 CODE-WRITE               VALUE SPACES.
-       01 PARTSUPPIN-EOF-WS                  PIC X(01) VALUE 'N'.
-           88 END-OF-FILE VALUE 'Y'.
+       01 FILES-EOF.
+           05 PARTSUPPIN-EOF-WS               PIC X(01) VALUE 'N'.
+              88 PARTSUP-END-OF-FILE                    VALUE 'Y'.
+           05 STATEZIP-EOF-WS                 PIC X(01) VALUE 'N'.
+              88 STATEZIP-EOF                           VALUE 'Y'.
 
 
       * Internal VARIABLE GROUP FOR PART-SUPP-ADDR-PO Copybook
@@ -150,6 +153,11 @@
        01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
       *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
        01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
+      
+      *9/20 Adding a COBOL Table for State Zip (to be initialized when 
+      *     STATEZIP loads)
+
+       COPY STATEZIP.
 
        PROCEDURE DIVISION.
 
@@ -235,6 +243,8 @@
                         '---------------------------------------------'
                 DISPLAY 'File Problem openning Input STATEZIP File'
                 GO TO 2000-ABEND-RTN
+           ELSE
+                PERFORM 3000-LoadInitialize
            END-IF.
            OPEN OUTPUT ERRORFILE.
       *    Output File Status Checking for ERRORFILE
@@ -259,7 +269,7 @@
                 END-IF
            END-READ.
       * To count number of records readed from PARTSUPPPIN file.
-           IF (NOT END-OF-FILE) THEN ADD +1 TO WS-IN-PARTSUPP-CTR
+           IF (NOT PARTSUP-END-OF-FILE) THEN ADD +1 TO WS-IN-PARTSUPP-CTR
            END-IF.
 
 
@@ -280,5 +290,21 @@
            DISPLAY 'PROGRAM ENCOUNTERED AN ERROR'.
            EXIT.
 
+       3000-LoadInitialize.
+           INITIALIZE STATEZIP-LIST.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM 3100-LoadStateTable UNTIL STATEZIP-EOF.
 
+       3100-LoadStateTable.
+           PERFORM 3150-ReadNextState.
+           PERFORM
+              MOVE STATEZIP TO STATEZIP-LIST(STATEZIP-INDEX)
+              ADD 1 TO STATEZIP-INDEX
+           UNTIL STATEZIP-EOF.
+           
+       3150-ReadNextState.
+           READ STATEZIP 
+           AT END 
+              MOVE 'Y' TO STATEZIP-EOF-WS.
+           END-READ.
 
