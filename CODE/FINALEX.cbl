@@ -150,6 +150,8 @@
       *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
        01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
 
+       01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
+
       *9/20 Adding a COBOL Table for State Zip (to be initialized when
       *     STATEZIP loads)
 
@@ -189,6 +191,38 @@
       *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
       *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
            DISPLAY '200-PROCESS-DATA'.
+      *9/16 Added the call of PARTEDIT SUBPROGRAM
+           PERFORM 205-MovePartEdit.
+
+           CALL 'PARTEDIT' USING
+              PART-NUMBER-OUT,
+              PART-NAME-OUT,
+              SPEC-NUMBER-OUT,
+              GOVT-COMML-CODE-OUT,
+              BLUEPRINT-NUMBER-OUT,
+              UNIT-OF-MEASURE-OUT,
+              WS-WEEKS-LEAD-AUX,
+              VEHICLE-MAKE-OUT,
+              VEHICLE-MODEL-OUT,
+              VEHICLE-YEAR-OUT,
+              WS-PARTEDIT-ERRORCOUNTER.
+           DISPLAY WS-PARTEDIT-ERRORCOUNTER.
+
+      * Starting checking the addresses on PARTSUPP.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+              FROM 1 BY 1
+              UNTIL WS-ADDR-COUNTER > 3
+                 MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
+                 CALL 'ADDREDIT'
+                    USING SUPP-ADDRESS,
+                          STATEZIP-TABLE,
+                          WS-PARTEDIT-ERRORCOUNTER
+                 DISPLAY WS-PARTEDIT-ERRORCOUNTER
+           END-PERFORM.
+
+       205-MovePartEdit.
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
            MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT
               IN WS-PART-SUPP-ADDR-PO-OUT.
@@ -211,24 +245,9 @@
            MOVE VEHICLE-MODEL-PO IN PART-SUPP-ADDR-PO TO
               VEHICLE-MODEL-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
            MOVE VEHICLE-YEAR-PO IN PART-SUPP-ADDR-PO TO
-              VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT
+              VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
       *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
-           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT
-      *9/16 Added the call of PARTEDIT SUBPROGRAM
-           CALL 'PARTEDIT' USING
-              PART-NUMBER-OUT,
-              PART-NAME-OUT,
-              SPEC-NUMBER-OUT,
-              GOVT-COMML-CODE-OUT,
-              BLUEPRINT-NUMBER-OUT,
-              UNIT-OF-MEASURE-OUT,
-              WS-WEEKS-LEAD-AUX,
-              VEHICLE-MAKE-OUT,
-              VEHICLE-MODEL-OUT,
-              VEHICLE-YEAR-OUT,
-              WS-PARTEDIT-ERRORCOUNTER.
-           DISPLAY WS-PARTEDIT-ERRORCOUNTER.
-
+           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
