@@ -190,7 +190,7 @@
       *    MOVE SUPPLIERS IN PART-SUPP-ADDR-PO    TO SUPPLIERS-OUT.
       *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
       *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
-           DISPLAY '200-PROCESS-DATA'.
+      *    DISPLAY '200-PROCESS-DATA'.
       *9/16 Added the call of PARTEDIT SUBPROGRAM
            PERFORM 205-MovePartEdit.
 
@@ -206,7 +206,7 @@
               VEHICLE-MODEL-OUT,
               VEHICLE-YEAR-OUT,
               WS-PARTEDIT-ERRORCOUNTER.
-           DISPLAY WS-PARTEDIT-ERRORCOUNTER.
+      *     DISPLAY WS-PARTEDIT-ERRORCOUNTER.
 
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
@@ -215,9 +215,11 @@
               FROM 1 BY 1
               UNTIL WS-ADDR-COUNTER > 3
                  MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
+                 DISPLAY SUPP-ADDRESS
                  CALL 'ADDREDIT'
                     USING SUPP-ADDRESS,
                           STATEZIP-TABLE,
+                          STATEZIP-MAX,
                           WS-PARTEDIT-ERRORCOUNTER
                  DISPLAY WS-PARTEDIT-ERRORCOUNTER
            END-PERFORM.
@@ -321,13 +323,16 @@
 
        3100-LoadStateTable.
            PERFORM 3150-ReadNextState UNTIL STATEZIP-EOF.
+           MOVE STATEZIP-INDEX TO STATEZIP-MAX.
 
        3150-ReadNextState.
-           READ STATEZIP
+           READ STATEZIP INTO STATEZIP-LIST(STATEZIP-INDEX)
               AT END
                  MOVE 'Y' TO STATEZIP-EOF-WS
-              MOVE STATEZIP-REC TO STATEZIP-LIST(STATEZIP-INDEX)
-              ADD 1 TO STATEZIP-INDEX
            END-READ.
+      *     DISPLAY STATEZIP-LIST(STATEZIP-INDEX).
+           ADD 1 TO STATEZIP-INDEX.
+
+
 
 
