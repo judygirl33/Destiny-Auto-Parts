@@ -27,13 +27,15 @@
        LINKAGE SECTION.
        COPY SUPADDRS. *>SUPP-ADDRESS Copybook
        COPY STATEZIP.
-       01 LS-ERRORCOUNTER   PIC 9(02)   VALUE ZEROES.
+       COPY ERRORS.
+
+      *01 ERRORCOUNTER   PIC 9(02)   VALUE ZEROES.
 
        PROCEDURE DIVISION USING
            SUPP-ADDRESS,
            STATEZIP-TABLE,
            STATEZIP-MAX,
-           LS-ERRORCOUNTER.
+           DATA-ERRORS.
 
            INITIALIZE CONTROLS-AND-FLAGS.
 
@@ -41,17 +43,20 @@
 
            IF ADDRESS-1 = SPACES
            THEN
-              ADD +1 TO LS-ERRORCOUNTER
+              ADD +4 TO ERRORCOUNTER
+              GOBACK
            END-IF.
 
            IF CITY = SPACES
            THEN
-              ADD +1 TO LS-ERRORCOUNTER
+              ADD +4 TO ERRORCOUNTER
+              GOBACK
            END-IF.
 
            IF ZIP-CODE = SPACES
            THEN
-              ADD +1 TO LS-ERRORCOUNTER
+              ADD +4 TO ERRORCOUNTER
+              GOBACK
            END-IF.
 
       *     DISPLAY ADDRESS-TYPE.
@@ -62,14 +67,24 @@
               WHEN ORDER-ADDRESS CONTINUE
               WHEN SCHED-ADDRESS CONTINUE
               WHEN REMIT-ADDRESS CONTINUE
-              WHEN OTHER ADD +1 TO LS-ERRORCOUNTER
+              WHEN OTHER
+                 ADD +1 TO ERRORCOUNTER
+                 IF ERRORCOUNTER > 3
+                    ADD +4 TO ERRORCOUNTER
+                    GOBACK
+                 ELSE
+                    MOVE "Warning - Invalid Address Type"
+                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                 END-IF
+                 GOBACK
            END-EVALUATE.
 
       *     DISPLAY ADDR-STATE.
 
            IF ADDR-STATE = SPACES
            THEN
-              ADD +1 TO LS-ERRORCOUNTER
+              ADD +4 TO ERRORCOUNTER
+              GOBACK
            ELSE
               MOVE 'N' TO FOUND-FLAG
       *        IF NOT-FOUND
@@ -90,20 +105,27 @@
                        IF WS-ZIPCODE >= WS-STATEZIP-START
                           AND WS-ZIPCODE <= WS-STATEZIP-END
                        THEN
-                          DISPLAY "OK, FOUND!"
+      *                   DISPLAY "OK, FOUND!"
                           MOVE 'Y' TO FOUND-FLAG
                        END-IF
                     END-IF
               END-PERFORM
               IF NOT-FOUND
       *           DISPLAY "NOT FOUND"
-                 ADD +1 TO LS-ERRORCOUNTER
+                 ADD +1 TO ERRORCOUNTER
+                 IF ERRORCOUNTER > 3
+                    ADD +4 TO ERRORCOUNTER
+                    GOBACK
+                 ELSE
+                    MOVE "Warning - Invalid Address Type"
+                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                 END-IF
       *        ELSE
       *           DISPLAY ADDR-STATE
               END-IF
       *        SET STATEZIP-IDX TO 1
       *        SEARCH ALL STATEZIP-LIST
-      *           AT END ADD +1 TO LS-ERRORCOUNTER
+      *           AT END ADD +1 TO ERRORCOUNTER
       *        WHEN STATE-ACRO (STATEZIP-IDX) = ADDR-STATE
       *           AND ZIP-CODE >= STATEZIP-START (STATEZIP-IDX)
       *           AND ZIP-CODE <= STATEZIP-END (STATEZIP-IDX)
@@ -111,4 +133,4 @@
       *        END-SEARCH
            END-IF.
 
-      *     DISPLAY "ERRORS IN ADDREDIT: " LS-ERRORCOUNTER.
+      *     DISPLAY "ERRORS IN ADDREDIT: " ERRORCOUNTER.

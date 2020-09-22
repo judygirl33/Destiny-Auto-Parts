@@ -54,12 +54,16 @@
            COPY PARTSUB. *> PART-SUPP-ADDR-PO Copybook
            COPY PRCHSORD. *>PURCHASE-ORDERS Copybook
            COPY SUPADDRS. *>SUPP-ADDRESS Copybook
-           COPY SUPPLIER. *>Suppliers Copybook
+           COPY SUPPLIER. *>Suppliers Copybook]
+           COPY ERRORS.   *> Used for Warnings/Errors.
+      *9/20 Adding a COBOL Table for State Zip (to be initialized when
+      *     STATEZIP loads)
+           COPY STATEZIP. *> Zip State CopyBook
       *>9/16 variable to determine return code
        01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
 
       *9/16 counter of errors found in Subprogram PARTSEDIT
-       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
+      *01  ERRORCOUNTER         PIC 9(02).
 
        01 FILE-STATUS-CODES.
       * Here we need to add FILES STATUS CODES of the other output files
@@ -152,10 +156,6 @@
 
        01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
 
-      *9/20 Adding a COBOL Table for State Zip (to be initialized when
-      *     STATEZIP loads)
-
-       COPY STATEZIP.
 
        PROCEDURE DIVISION.
 
@@ -169,7 +169,7 @@
       * Initialization Routine
            INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
       *9/16 Initialize the Return-Code and error-counter from subprogram
-           INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
+           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
       * Priming Read
            PERFORM 300-Open-Files.
            PERFORM 400-Read-PARTSUPPIN.
@@ -180,7 +180,7 @@
            PERFORM 200-PROCESS-DATA.
            PERFORM 500-Write-ERRORFILE.
       * 9/18 Initializing counters before reading next record
-           INITIALIZE WS-RETURN-CODE, WS-PARTEDIT-ERRORCOUNTER.
+           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
            PERFORM 400-Read-PARTSUPPIN.
 
 
@@ -205,24 +205,58 @@
               VEHICLE-MAKE-OUT,
               VEHICLE-MODEL-OUT,
               VEHICLE-YEAR-OUT,
-              WS-PARTEDIT-ERRORCOUNTER.
-      *     DISPLAY WS-PARTEDIT-ERRORCOUNTER.
+              ERRORCOUNTER.
+      *     DISPLAY ERRORCOUNTER.
 
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
            PERFORM
               VARYING WS-ADDR-COUNTER
               FROM 1 BY 1
-              UNTIL WS-ADDR-COUNTER > 3
+              UNTIL WS-ADDR-COUNTER > 3 OR WRONG-DATA
                  MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
                  DISPLAY SUPP-ADDRESS
                  CALL 'ADDREDIT'
                     USING SUPP-ADDRESS,
                           STATEZIP-TABLE,
                           STATEZIP-MAX,
-                          WS-PARTEDIT-ERRORCOUNTER
-                 DISPLAY WS-PARTEDIT-ERRORCOUNTER
+                          DATA-ERRORS
+      *           DISPLAY ERRORCOUNTER
+      *
+      * 22/09 - After processing the address, do this check to see
+      *         if you had exhausted all the warnings you could or if
+      *         you had something bigger, and so engage the WRONG-DATA
+      *         88 field so the next checks can be avoided
+      *         (performance improvement)
+      *
+              IF ERRORCOUNTER > 3
+                 MOVE  'Y' TO DATA-ERROR-FLAG
+              END-IF
            END-PERFORM.
+
+           EVALUATE TRUE
+              WHEN WRONG-DATA       PERFORM 208-ProcessError
+              WHEN ERRORCOUNTER > 0 PERFORM 208-ProcessWarning
+              WHEN OTHER            PERFORM 208-ProcessOkay
+           END-EVALUATE.
+
+       208-ProcessError.
+           DISPLAY "Wrong Data!!".
+           DISPLAY PART-SUPP-ADDR-PO.
+
+       208-ProcessWarning.
+           DISPLAY "Some Errors on this Data Line:".
+           DISPLAY PART-SUPP-ADDR-PO.
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+                 FROM 1 BY 1
+                    UNTIL WS-ADDR-COUNTER > ERRORCOUNTER
+                       DISPLAY ERROR-MESSAGE (WS-ADDR-COUNTER)
+           END-PERFORM.
+
+       208-ProcessOkay.
+           DISPLAY "Data Ok...".
+           DISPLAY PART-SUPP-ADDR-PO.
 
        205-MovePartEdit.
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
