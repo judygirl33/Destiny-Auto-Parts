@@ -2,6 +2,8 @@
        PROGRAM-ID. FINALEX.
       ******************************************************************
       * INSERT HERE WHAT THE PROGRAM DOES
+      * version copied from Fabio Remote Github on 9/15 plus changes
+      * done by Ivanna on 9/16
       ******************************************************************
 
        ENVIRONMENT DIVISION.
@@ -52,7 +54,16 @@
            COPY PARTSUB. *> PART-SUPP-ADDR-PO Copybook
            COPY PRCHSORD. *>PURCHASE-ORDERS Copybook
            COPY SUPADDRS. *>SUPP-ADDRESS Copybook
-           COPY SUPPLIER. *>Suppliers Copybook
+           COPY SUPPLIER. *>Suppliers Copybook]
+           COPY ERRORS.   *> Used for Warnings/Errors.
+      *9/20 Adding a COBOL Table for State Zip (to be initialized when
+      *     STATEZIP loads)
+           COPY STATEZIP. *> Zip State CopyBook
+      *>9/16 variable to determine return code
+       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
+
+      *9/16 counter of errors found in Subprogram PARTSEDIT
+      *01  ERRORCOUNTER         PIC 9(02).
 
        01 FILE-STATUS-CODES.
       * Here we need to add FILES STATUS CODES of the other output files
@@ -69,21 +80,24 @@
       * File status key for Output ErrorFile
            05 OUT-ERRORFILE-KEY          PIC X(2).
                 88 CODE-WRITE               VALUE SPACES.
-       01 PARTSUPPIN-EOF-WS                  PIC X(01) VALUE 'N'.
-           88 END-OF-FILE VALUE 'Y'.
+       01 FILES-EOF.
+           05 PARTSUPPIN-EOF-WS               PIC X(01) VALUE 'N'.
+              88 PARTSUP-END-OF-FILE                    VALUE 'Y'.
+           05 STATEZIP-EOF-WS                 PIC X(01) VALUE 'N'.
+              88 STATEZIP-EOF                           VALUE 'Y'.
 
 
       * Internal VARIABLE GROUP FOR PART-SUPP-ADDR-PO Copybook
        01  WS-PART-SUPP-ADDR-PO-OUT.
            05 PARTS-OUT.
-               10  PART-NUMBER       PIC X(23) VALUE SPACES.
-               10  PART-NAME         PIC X(14) VALUE SPACES.
-               10  SPEC-NUMBER       PIC X(07) VALUE SPACES.
-               10  GOVT-COMML-CODE   PIC X(01) VALUE SPACES.
-               10  BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES.
-               10  UNIT-OF-MEASURE   PIC X(03) VALUE SPACES.
-               10  WEEKS-LEAD-TIME   PIC 9(03) VALUE ZERO.
-               10  VEHICLE-MAKE      PIC X(03) VALUE SPACES.
+               10  PART-NUMBER-OUT       PIC X(23) VALUE SPACES.
+               10  PART-NAME-OUT         PIC X(14) VALUE SPACES.
+               10  SPEC-NUMBER-OUT       PIC X(07) VALUE SPACES.
+               10  GOVT-COMML-CODE-OUT   PIC X(01) VALUE SPACES.
+               10  BLUEPRINT-NUMBER-OUT  PIC X(10) VALUE SPACES.
+               10  UNIT-OF-MEASURE-OUT   PIC X(03) VALUE SPACES.
+               10  WEEKS-LEAD-TIME-OUT   PIC 9(03) VALUE ZERO.
+               10  VEHICLE-MAKE-OUT      PIC X(03) VALUE SPACES.
                     88 CHRYSLER       VALUE 'CHR'.
                     88 FORD           VALUE 'FOR'.
                     88 GM             VALUE 'GM '.
@@ -92,8 +106,8 @@
                     88 JAGUAR         VALUE 'JAG'.
                     88 PEUGEOT        VALUE 'PEU'.
                     88 BMW            VALUE 'BMW'.
-               10  VEHICLE-MODEL     PIC X(10) VALUE SPACES.
-               10  VEHICLE-YEAR      PIC X(04) VALUE '0000'.
+               10  VEHICLE-MODEL-OUT     PIC X(10) VALUE SPACES.
+               10  VEHICLE-YEAR-OUT     PIC X(04) VALUE '0000'.
                10  FILLER            PIC X(14) VALUE SPACES.
            05 SUPPLIERS-OUT.
                10  SUPPLIER-CODE     PIC X(10) VALUE SPACES.
@@ -137,6 +151,10 @@
       *Counter of records readed from PARTSUPPIN file:
        01 WS-IN-PARTSUPP-CTR               PIC 9(7) VALUE ZERO.
 
+      *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
+       01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
+
+       01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
 
 
        PROCEDURE DIVISION.
@@ -150,6 +168,8 @@
        000-Housekeeping.
       * Initialization Routine
            INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
+      *9/16 Initialize the Return-Code and error-counter from subprogram
+           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
       * Priming Read
            PERFORM 300-Open-Files.
            PERFORM 400-Read-PARTSUPPIN.
@@ -159,18 +179,111 @@
       *    DISPLAY '100-Main'.
            PERFORM 200-PROCESS-DATA.
            PERFORM 500-Write-ERRORFILE.
+      * 9/18 Initializing counters before reading next record
+           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
            PERFORM 400-Read-PARTSUPPIN.
 
 
        200-PROCESS-DATA.
       * From PARTSUPPIN file
-           MOVE PARTS  TO PARTS-OUT.
-           MOVE SUPPLIERS    TO SUPPLIERS-OUT.
-      * Subscription Move just for some testing - will be corrected in
-      * the future - FABIO
-           MOVE SUPP-ADDRESS     TO SUPP-ADDRESS-OUT(1).
-           MOVE PURCHASE-ORDERS     TO PURCHASE-ORDER-OUT(1).
+      *    MOVE PARTS IN PART-SUPP-ADDR-PO  TO PARTS-OUT.
+      *    MOVE SUPPLIERS IN PART-SUPP-ADDR-PO    TO SUPPLIERS-OUT.
+      *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
+      *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+      *    DISPLAY '200-PROCESS-DATA'.
+      *9/16 Added the call of PARTEDIT SUBPROGRAM
+           PERFORM 205-MovePartEdit.
 
+           CALL 'PARTEDIT' USING
+              PART-NUMBER-OUT,
+              PART-NAME-OUT,
+              SPEC-NUMBER-OUT,
+              GOVT-COMML-CODE-OUT,
+              BLUEPRINT-NUMBER-OUT,
+              UNIT-OF-MEASURE-OUT,
+              WS-WEEKS-LEAD-AUX,
+              VEHICLE-MAKE-OUT,
+              VEHICLE-MODEL-OUT,
+              VEHICLE-YEAR-OUT,
+              ERRORCOUNTER.
+      *     DISPLAY ERRORCOUNTER.
+
+      * Starting checking the addresses on PARTSUPP.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+              FROM 1 BY 1
+              UNTIL WS-ADDR-COUNTER > 3 OR WRONG-DATA
+                 MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
+                 DISPLAY SUPP-ADDRESS
+                 CALL 'ADDREDIT'
+                    USING SUPP-ADDRESS,
+                          STATEZIP-TABLE,
+                          STATEZIP-MAX,
+                          DATA-ERRORS
+      *           DISPLAY ERRORCOUNTER
+      *
+      * 22/09 - After processing the address, do this check to see
+      *         if you had exhausted all the warnings you could or if
+      *         you had something bigger, and so engage the WRONG-DATA
+      *         88 field so the next checks can be avoided
+      *         (performance improvement)
+      *
+              IF ERRORCOUNTER > 3
+                 MOVE  'Y' TO DATA-ERROR-FLAG
+              END-IF
+           END-PERFORM.
+
+           EVALUATE TRUE
+              WHEN WRONG-DATA       PERFORM 208-ProcessError
+              WHEN ERRORCOUNTER > 0 PERFORM 208-ProcessWarning
+              WHEN OTHER            PERFORM 208-ProcessOkay
+           END-EVALUATE.
+
+       208-ProcessError.
+           DISPLAY "Wrong Data!!".
+           DISPLAY PART-SUPP-ADDR-PO.
+
+       208-ProcessWarning.
+           DISPLAY "Some Errors on this Data Line:".
+           DISPLAY PART-SUPP-ADDR-PO.
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+                 FROM 1 BY 1
+                    UNTIL WS-ADDR-COUNTER > ERRORCOUNTER
+                       DISPLAY ERROR-MESSAGE (WS-ADDR-COUNTER)
+           END-PERFORM.
+
+       208-ProcessOkay.
+           DISPLAY "Data Ok...".
+           DISPLAY PART-SUPP-ADDR-PO.
+
+       205-MovePartEdit.
+      *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
+           MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT
+              IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE PART-NAME-PO IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
+              WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE PART-NAME-PO IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
+              WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE SPEC-NUMBER-PO IN PART-SUPP-ADDR-PO TO SPEC-NUMBER-OUT
+              IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE GOVT-COMML-CODE-PO IN PART-SUPP-ADDR-PO TO
+              GOVT-COMML-CODE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE BLUEPRINT-NUMBER-PO IN PART-SUPP-ADDR-PO TO
+              BLUEPRINT-NUMBER-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE UNIT-OF-MEASURE-PO IN PART-SUPP-ADDR-PO TO
+              UNIT-OF-MEASURE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE WEEKS-LEAD-TIME-PO IN PART-SUPP-ADDR-PO TO
+              WEEKS-LEAD-TIME-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-MAKE-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-MAKE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-MODEL-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-MODEL-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-YEAR-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+      *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
+           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -189,6 +302,8 @@
                         '---------------------------------------------'
                 DISPLAY 'File Problem openning Input STATEZIP File'
                 GO TO 2000-ABEND-RTN
+           ELSE
+                PERFORM 3000-LoadInitialize
            END-IF.
            OPEN OUTPUT ERRORFILE.
       *    Output File Status Checking for ERRORFILE
@@ -213,7 +328,8 @@
                 END-IF
            END-READ.
       * To count number of records readed from PARTSUPPPIN file.
-           IF (NOT END-OF-FILE) THEN ADD +1 TO WS-IN-PARTSUPP-CTR
+           IF (NOT PARTSUP-END-OF-FILE) THEN
+              ADD +1 TO WS-IN-PARTSUPP-CTR
            END-IF.
 
 
@@ -233,6 +349,24 @@
        2000-ABEND-RTN.
            DISPLAY 'PROGRAM ENCOUNTERED AN ERROR'.
            EXIT.
+
+       3000-LoadInitialize.
+           INITIALIZE STATEZIP-TABLE.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM 3100-LoadStateTable UNTIL STATEZIP-EOF.
+
+       3100-LoadStateTable.
+           PERFORM 3150-ReadNextState UNTIL STATEZIP-EOF.
+           MOVE STATEZIP-INDEX TO STATEZIP-MAX.
+
+       3150-ReadNextState.
+           READ STATEZIP INTO STATEZIP-LIST(STATEZIP-INDEX)
+              AT END
+                 MOVE 'Y' TO STATEZIP-EOF-WS
+           END-READ.
+      *     DISPLAY STATEZIP-LIST(STATEZIP-INDEX).
+           ADD 1 TO STATEZIP-INDEX.
+
 
 
 
