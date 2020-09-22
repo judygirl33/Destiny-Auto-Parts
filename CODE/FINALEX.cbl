@@ -55,6 +55,11 @@
            COPY PRCHSORD. *>PURCHASE-ORDERS Copybook
            COPY SUPADDRS. *>SUPP-ADDRESS Copybook
            COPY SUPPLIER. *>Suppliers Copybook
+      *>9/16 variable to determine return code
+       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
+
+      *9/16 counter of errors found in Subprogram PARTSEDIT
+       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
 
        01 FILE-STATUS-CODES.
       * Here we need to add FILES STATUS CODES of the other output files
@@ -71,8 +76,11 @@
       * File status key for Output ErrorFile
            05 OUT-ERRORFILE-KEY          PIC X(2).
                 88 CODE-WRITE               VALUE SPACES.
-       01 PARTSUPPIN-EOF-WS                  PIC X(01) VALUE 'N'.
-           88 END-OF-FILE VALUE 'Y'.
+       01 FILES-EOF.
+           05 PARTSUPPIN-EOF-WS               PIC X(01) VALUE 'N'.
+              88 PARTSUP-END-OF-FILE                    VALUE 'Y'.
+           05 STATEZIP-EOF-WS                 PIC X(01) VALUE 'N'.
+              88 STATEZIP-EOF                           VALUE 'Y'.
 
 
       * Internal VARIABLE GROUP FOR PART-SUPP-ADDR-PO Copybook
@@ -139,12 +147,15 @@
       *Counter of records readed from PARTSUPPIN file:
        01 WS-IN-PARTSUPP-CTR               PIC 9(7) VALUE ZERO.
 
-      *>9/16 variable to determine return code
-       01 WS-RETURN-CODE                   PIC X(1) VALUE SPACE.
-      *9/16 counter of errors found in Subprogram PARTSEDIT
-       01 WS-PARTEDIT-ERRORCOUNTER         PIC 9(02).
       *9/18 ADDED THIS AUXILIAR VARIABLE AS WORKAROUND WITH COMP FIELD
        01 WS-WEEKS-LEAD-AUX                PIC 9(03) COMP.
+
+       01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
+
+      *9/20 Adding a COBOL Table for State Zip (to be initialized when
+      *     STATEZIP loads)
+
+       COPY STATEZIP.
 
        PROCEDURE DIVISION.
 
@@ -180,38 +191,63 @@
       *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
       *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
            DISPLAY '200-PROCESS-DATA'.
-      *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
-           MOVE PART-NUMBER IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT IN
-           WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE PART-NAME IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
-           WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE PART-NAME IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
-           WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE SPEC-NUMBER IN PART-SUPP-ADDR-PO TO SPEC-NUMBER-OUT IN
-           WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE GOVT-COMML-CODE IN PART-SUPP-ADDR-PO TO
-           GOVT-COMML-CODE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE BLUEPRINT-NUMBER IN PART-SUPP-ADDR-PO TO
-           BLUEPRINT-NUMBER-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE UNIT-OF-MEASURE IN PART-SUPP-ADDR-PO TO
-           UNIT-OF-MEASURE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE WEEKS-LEAD-TIME IN PART-SUPP-ADDR-PO TO
-           WEEKS-LEAD-TIME-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE VEHICLE-MAKE IN PART-SUPP-ADDR-PO TO
-           VEHICLE-MAKE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE VEHICLE-MODEL IN PART-SUPP-ADDR-PO TO
-           VEHICLE-MODEL-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
-           MOVE VEHICLE-YEAR IN PART-SUPP-ADDR-PO TO
-           VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT
-      *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
-           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT
       *9/16 Added the call of PARTEDIT SUBPROGRAM
-           CALL 'PARTEDIT' USING PART-NUMBER-OUT,PART-NAME-OUT,
-           SPEC-NUMBER-OUT, GOVT-COMML-CODE-OUT, BLUEPRINT-NUMBER-OUT,
-           UNIT-OF-MEASURE-OUT, WS-WEEKS-LEAD-AUX,VEHICLE-MAKE-OUT,
-           VEHICLE-MODEL-OUT, VEHICLE-YEAR-OUT,WS-PARTEDIT-ERRORCOUNTER.
+           PERFORM 205-MovePartEdit.
+
+           CALL 'PARTEDIT' USING
+              PART-NUMBER-OUT,
+              PART-NAME-OUT,
+              SPEC-NUMBER-OUT,
+              GOVT-COMML-CODE-OUT,
+              BLUEPRINT-NUMBER-OUT,
+              UNIT-OF-MEASURE-OUT,
+              WS-WEEKS-LEAD-AUX,
+              VEHICLE-MAKE-OUT,
+              VEHICLE-MODEL-OUT,
+              VEHICLE-YEAR-OUT,
+              WS-PARTEDIT-ERRORCOUNTER.
            DISPLAY WS-PARTEDIT-ERRORCOUNTER.
 
+      * Starting checking the addresses on PARTSUPP.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+              FROM 1 BY 1
+              UNTIL WS-ADDR-COUNTER > 3
+                 MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
+                 CALL 'ADDREDIT'
+                    USING SUPP-ADDRESS,
+                          STATEZIP-TABLE,
+                          WS-PARTEDIT-ERRORCOUNTER
+                 DISPLAY WS-PARTEDIT-ERRORCOUNTER
+           END-PERFORM.
+
+       205-MovePartEdit.
+      *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
+           MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT
+              IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE PART-NAME-PO IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
+              WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE PART-NAME-PO IN PART-SUPP-ADDR-PO TO PART-NAME-OUT IN
+              WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE SPEC-NUMBER-PO IN PART-SUPP-ADDR-PO TO SPEC-NUMBER-OUT
+              IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE GOVT-COMML-CODE-PO IN PART-SUPP-ADDR-PO TO
+              GOVT-COMML-CODE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE BLUEPRINT-NUMBER-PO IN PART-SUPP-ADDR-PO TO
+              BLUEPRINT-NUMBER-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE UNIT-OF-MEASURE-PO IN PART-SUPP-ADDR-PO TO
+              UNIT-OF-MEASURE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE WEEKS-LEAD-TIME-PO IN PART-SUPP-ADDR-PO TO
+              WEEKS-LEAD-TIME-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-MAKE-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-MAKE-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-MODEL-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-MODEL-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+           MOVE VEHICLE-YEAR-PO IN PART-SUPP-ADDR-PO TO
+              VEHICLE-YEAR-OUT IN WS-PART-SUPP-ADDR-PO-OUT.
+      *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
+           COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -230,6 +266,8 @@
                         '---------------------------------------------'
                 DISPLAY 'File Problem openning Input STATEZIP File'
                 GO TO 2000-ABEND-RTN
+           ELSE
+                PERFORM 3000-LoadInitialize
            END-IF.
            OPEN OUTPUT ERRORFILE.
       *    Output File Status Checking for ERRORFILE
@@ -254,7 +292,8 @@
                 END-IF
            END-READ.
       * To count number of records readed from PARTSUPPPIN file.
-           IF (NOT END-OF-FILE) THEN ADD +1 TO WS-IN-PARTSUPP-CTR
+           IF (NOT PARTSUP-END-OF-FILE) THEN
+              ADD +1 TO WS-IN-PARTSUPP-CTR
            END-IF.
 
 
@@ -275,5 +314,20 @@
            DISPLAY 'PROGRAM ENCOUNTERED AN ERROR'.
            EXIT.
 
+       3000-LoadInitialize.
+           INITIALIZE STATEZIP-TABLE.
+           INITIALIZE STATEZIP-INDEX.
+           PERFORM 3100-LoadStateTable UNTIL STATEZIP-EOF.
+
+       3100-LoadStateTable.
+           PERFORM 3150-ReadNextState UNTIL STATEZIP-EOF.
+
+       3150-ReadNextState.
+           READ STATEZIP
+              AT END
+                 MOVE 'Y' TO STATEZIP-EOF-WS
+              MOVE STATEZIP-REC TO STATEZIP-LIST(STATEZIP-INDEX)
+              ADD 1 TO STATEZIP-INDEX
+           END-READ.
 
 
