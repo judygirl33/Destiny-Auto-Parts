@@ -1,6 +1,6 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PARTEDIT.
-       AUTHOR. IVANNA COLÁN.
+       AUTHOR. IVANNA COLN.
       ******************************************************************
       * validates the data of the PARTs PORTION OF a PARTSUPP record
       *9/18 used 05 variables instead of PARTS group variable to avoid
