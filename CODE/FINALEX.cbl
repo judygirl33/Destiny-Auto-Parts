@@ -261,6 +261,9 @@
 
 
        200-PROCESS-DATA.
+
+           INITIALIZE DATA-ERRORS.
+
       * From PARTSUPPIN file
       *    MOVE PARTS IN PART-SUPP-ADDR-PO  TO PARTS-OUT.
       *    MOVE SUPPLIERS IN PART-SUPP-ADDR-PO    TO SUPPLIERS-OUT.
@@ -270,7 +273,6 @@
       *9/16 Added the call of PARTEDIT SUBPROGRAM
            PERFORM 205-MovePartEdit.
 
-           INITIALIZE DATA-ERRORS.
 
            CALL 'PARTEDIT' USING
               PART-NUMBER-OUT,
@@ -286,6 +288,14 @@
               ERRORCOUNTER.
       *     DISPLAY ERRORCOUNTER.
 
+           PERFORM 205-MoveSupplier.
+
+           IF NOT WRONG-DATA
+              THEN
+                 CALL 'SUPPEDIT'
+                    USING SUPPLIERS, DATA-ERRORS
+           END-IF
+
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
            PERFORM
@@ -293,7 +303,8 @@
               FROM 1 BY 1
               UNTIL WS-ADDR-COUNTER > 3 OR WRONG-DATA
                  MOVE SUPP-ADDRESS-PO(WS-ADDR-COUNTER) TO SUPP-ADDRESS
-                 DISPLAY SUPP-ADDRESS
+      *           DISPLAY "HERE!"
+      *           DISPLAY SUPP-ADDRESS
                  CALL 'ADDREDIT'
                     USING SUPP-ADDRESS,
                           STATEZIP-TABLE,
@@ -345,6 +356,22 @@
       *9/18 USING AN INTEGER AUX VARILABLE AS WORKAROUND
            COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
+       205-MoveSupplier.
+           MOVE SUPPLIER-CODE-PO
+              TO SUPPLIER-CODE IN SUPPLIERS.
+           MOVE SUPPLIER-TYPE-PO
+              TO SUPPLIER-TYPE IN SUPPLIERS.
+           MOVE SUPPLIER-NAME-PO
+              TO SUPPLIER-NAME IN SUPPLIERS.
+           MOVE SUPPLIER-PERF-PO
+              TO SUPPLIER-PERF IN SUPPLIERS.
+           MOVE SUPPLIER-RATING-PO
+              TO SUPPLIER-RATING IN SUPPLIERS.
+           MOVE SUPPLIER-STATUS-PO
+              TO SUPPLIER-STATUS IN SUPPLIERS.
+           MOVE SUPPLIER-ACT-DATE-PO
+              TO SUPPLIER-ACT-DATE IN SUPPLIERS.
+
        208-ProcessError.
            MOVE "Wrong Data!!" TO ERRORFILE-REC.
            WRITE ERRORFILE-REC.
@@ -383,7 +410,7 @@
                     TO REC-ADDRESSES
                  WRITE ADDRESS-REC
            END-PERFORM.
-       
+
        209-MovePurchases.
            PERFORM VARYING WS-ADDR-COUNTER FROM 1 BY 1
               UNTIL WS-ADDR-COUNTER > 3
