@@ -21,7 +21,18 @@
            SELECT ERRORFILE ASSIGN TO ERRFILE
            FILE STATUS IS OUT-ERRORFILE-KEY.
 
+           SELECT WARNINGFILE ASSIGN TO WARNING
+           FILE STATUS IS OUT-WARNING-KEY.
+
       * HERE declare the other 3 output files PARTS, ADDRESS, PURCHASE>>
+           SELECT PARTS-FILE ASSIGN TO PARTS
+           FILE STATUS IS OUT-PARTSFILE-KEY.
+
+           SELECT ADDR-FILES ASSIGN TO ADDR
+           FILE STATUS IS OUT-ADDRFILE-KEY.
+
+           SELECT PURC-FILES  ASSIGN TO PURCHASE
+           FILE STATUS IS OUT-PURCFILE-KEY.
 
        DATA DIVISION.
        FILE SECTION.
@@ -41,13 +52,63 @@
            DATA RECORD IS STATEZIP-REC.
        01  STATEZIP-REC     PIC X(33).
 
-        FD ERRORFILE
+       FD  ERRORFILE
            RECORDING MODE IS F
            LABEL RECORDS ARE STANDARD
-           RECORD CONTAINS 80 CHARACTERS
+           RECORD CONTAINS 500 CHARACTERS
            BLOCK CONTAINS 0 RECORDS
            DATA RECORD IS ERRORFILE-REC.
-          01  ERRORFILE-REC PIC X(80).
+       01  ERRORFILE-REC PIC X(500).
+
+       FD  WARNINGFILE
+           RECORDING MODE IS F
+           LABEL RECORDS ARE STANDARD
+           RECORD CONTAINS 500 CHARACTERS
+           BLOCK CONTAINS 0 RECORDS
+           DATA RECORD IS WARNING-REC.
+       01  WARNING-REC PIC X(500).
+
+       FD  PURC-FILES
+           RECORDING MODE IS F
+           DATA RECORD IS PURCHASE-REC.
+       01  PURCHASE-REC.
+           05  REC-PO-NUMBER           PIC X(06) VALUE SPACES.
+           05  REC-BUYER-CODE          PIC X(03) VALUE SPACES.
+           05  REC-QUANTITY            PIC S9(8) COMP VALUE ZERO.
+           05  REC-UNIT-PRICE          PIC S9(7)V99 COMP-3 VALUE ZERO.
+           05  REC-ORDER-DATE          PIC X(08) VALUE SPACES.
+           05  REC-DELIVERY-DATE       PIC X(08) VALUE SPACES.
+
+       FD  ADDR-FILES
+           RECORDING MODE IS F
+           DATA RECORD IS ADDRESS-REC.
+       01  ADDRESS-REC.
+           05 REC-ADDRESSES.
+              08 REC-ADDRESS-TYPE      PIC X(01) VALUE SPACES.
+              08 REC-ADDRESS-1         PIC X(15) VALUE SPACES.
+              08 REC-ADDRESS-2         PIC X(15) VALUE SPACES.
+              08 REC-ADDRESS-3         PIC X(15) VALUE SPACES.
+              08 REC-CITY              PIC X(15) VALUE SPACES.
+              08 REC-ADDR-STATE        PIC X(02) VALUE SPACES.
+              08 REC-ZIP-CODE          PIC X(05) VALUE SPACES.
+
+       FD  PARTS-FILE
+           RECORDING MODE IS F
+           LABEL RECORDS ARE STANDARD
+           RECORD CONTAINS 72 CHARACTERS
+           BLOCK CONTAINS 0 RECORDS
+           DATA RECORD IS PARTS-REC.
+       01  PARTS-REC.
+           05  REC-PART-NUMBER       PIC X(23) VALUE SPACES.
+           05  REC-PART-NAME         PIC X(14) VALUE SPACES.
+           05  REC-SPEC-NUMBER       PIC X(07) VALUE SPACES.
+           05  REC-GOVT-COMML-CODE   PIC X(01) VALUE SPACES.
+           05  REC-BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES.
+           05  REC-UNIT-OF-MEASURE   PIC X(03) VALUE SPACES.
+           05  REC-WEEKS-LEAD-TIME   PIC S9(04) COMP VALUE ZEROS.
+           05  REC-VEHICLE-MAKE      PIC X(03) VALUE SPACES.
+           05  REC-VEHICLE-MODEL     PIC X(05) VALUE SPACES.
+           05  REC-VEHICLE-YEAR      PIC X(04) VALUE '0000'.
 
        WORKING-STORAGE SECTION.
            COPY PARTS. *>Parts Copybook
@@ -78,6 +139,19 @@
       * File status key for Output ErrorFile
            05 OUT-ERRORFILE-KEY          PIC X(2).
                 88 CODE-WRITE               VALUE SPACES.
+
+           05 OUT-PARTSFILE-KEY          PIC X(2).
+                88 CODE-WRITE               VALUE SPACES.
+
+           05 OUT-PURCFILE-KEY           PIC X(2).
+                88 CODE-WRITE               VALUE SPACES.
+
+           05 OUT-ADDRFILE-KEY           PIC X(2).
+                88 CODE-WRITE               VALUE SPACES.
+
+           05 OUT-WARNING-KEY            PIC X(2).
+                88 CODE-WRITE               VALUE SPACES.
+
        01 FILES-EOF.
            05 PARTSUPPIN-EOF-WS               PIC X(01) VALUE 'N'.
               88 PARTSUP-END-OF-FILE                    VALUE 'Y'.
@@ -144,8 +218,6 @@
                10  ORDER-DATE        PIC 9(08) VALUE ZERO.
                10  DELIVERY-DATE     PIC 9(08) VALUE ZERO.
 
-
-
       *Counter of records readed from PARTSUPPIN file:
        01 WS-IN-PARTSUPP-CTR               PIC 9(7) VALUE ZERO.
 
@@ -167,7 +239,7 @@
       * Initialization Routine
            INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
       *9/16 Initialize the Return-Code and error-counter from subprogram
-           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
+           INITIALIZE WS-RETURN-CODE.
       * Priming Read
            PERFORM 300-Open-Files.
            PERFORM 400-Read-PARTSUPPIN.
@@ -178,7 +250,7 @@
            PERFORM 200-PROCESS-DATA.
            PERFORM 500-Write-ERRORFILE.
       * 9/18 Initializing counters before reading next record
-           INITIALIZE WS-RETURN-CODE, DATA-ERRORS.
+           INITIALIZE WS-RETURN-CODE.
            PERFORM 400-Read-PARTSUPPIN.
 
 
@@ -191,6 +263,8 @@
       *    DISPLAY '200-PROCESS-DATA'.
       *9/16 Added the call of PARTEDIT SUBPROGRAM
            PERFORM 205-MovePartEdit.
+
+           INITIALIZE DATA-ERRORS.
 
            CALL 'PARTEDIT' USING
               PART-NUMBER-OUT,
@@ -239,22 +313,44 @@
            END-EVALUATE.
 
        208-ProcessError.
-           DISPLAY "Wrong Data!!".
-           DISPLAY PART-SUPP-ADDR-PO.
+           MOVE "Wrong Data!!" TO ERRORFILE-REC.
+           WRITE ERRORFILE-REC.
+           MOVE PART-SUPP-ADDR-PO TO ERRORFILE-REC.
+           WRITE ERRORFILE-REC.
 
        208-ProcessWarning.
-           DISPLAY "Some Errors on this Data Line:".
-           DISPLAY PART-SUPP-ADDR-PO.
+           MOVE "Some Errors on this Data Line:" TO WARNING-REC.
+           WRITE WARNING-REC.
+           MOVE PART-SUPP-ADDR-PO TO WARNING-REC.
+           WRITE WARNING-REC.
            PERFORM
               VARYING WS-ADDR-COUNTER
                  FROM 1 BY 1
                     UNTIL WS-ADDR-COUNTER > ERRORCOUNTER
-                       DISPLAY ERROR-MESSAGE (WS-ADDR-COUNTER)
+                       MOVE ERROR-MESSAGE (WS-ADDR-COUNTER)
+                          TO WARNING-REC
+                       WRITE WARNING-REC
            END-PERFORM.
 
        208-ProcessOkay.
-           DISPLAY "Data Ok...".
-           DISPLAY PART-SUPP-ADDR-PO.
+      *     DISPLAY "Data Ok...".
+      *     DISPLAY PART-SUPP-ADDR-PO.
+           PERFORM 209-MoveParts.
+           PERFORM 209-MoveAddresses.
+      *     PERFORM 209-MovePurchases.
+
+       209-MoveParts.
+           MOVE PARTS-OUT TO PARTS-REC.
+           WRITE PARTS-REC.
+
+       209-MoveAddresses.
+           PERFORM VARYING WS-ADDR-COUNTER FROM 1 BY 1
+              UNTIL WS-ADDR-COUNTER > 3
+                 MOVE SUPP-ADDRESS-PO (WS-ADDR-COUNTER)
+                    TO REC-ADDRESSES
+                 WRITE ADDRESS-REC
+           END-PERFORM.
+
 
        205-MovePartEdit.
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
@@ -303,6 +399,7 @@
            ELSE
                 PERFORM 3000-LoadInitialize
            END-IF.
+
            OPEN OUTPUT ERRORFILE.
       *    Output File Status Checking for ERRORFILE
            IF OUT-ERRORFILE-KEY NOT = '00' THEN
@@ -312,7 +409,41 @@
                 GO TO 2000-ABEND-RTN
            END-IF.
 
+           OPEN OUTPUT WARNINGFILE.
+      *    Output File Status Checking for ERRORFILE
+           IF OUT-WARNING-KEY NOT = '00' THEN
+                DISPLAY
+                        '---------------------------------------------'
+                DISPLAY 'File Problem openning WARNING'
+                GO TO 2000-ABEND-RTN
+           END-IF.
 
+           OPEN OUTPUT PARTS-FILE.
+      *    Output File Status Checking for ERRORFILE
+           IF OUT-PARTSFILE-KEY NOT = '00' THEN
+                DISPLAY
+                        '---------------------------------------------'
+                DISPLAY 'File Problem openning PARTS'
+                GO TO 2000-ABEND-RTN
+           END-IF.
+
+           OPEN OUTPUT ADDR-FILES.
+      *    Output File Status Checking for ERRORFILE
+           IF OUT-ADDRFILE-KEY NOT = '00' THEN
+                DISPLAY
+                        '---------------------------------------------'
+                DISPLAY 'File Problem openning ADDR'
+                GO TO 2000-ABEND-RTN
+           END-IF.
+
+           OPEN OUTPUT PURC-FILES.
+      *    Output File Status Checking for ERRORFILE
+           IF OUT-PURCFILE-KEY NOT = '00' THEN
+                DISPLAY
+                        '---------------------------------------------'
+                DISPLAY 'File Problem openning PURCHASE'
+                GO TO 2000-ABEND-RTN
+           END-IF.
 
        400-Read-PARTSUPPIN.
            READ PARTSUPPIN INTO PART-SUPP-ADDR-PO

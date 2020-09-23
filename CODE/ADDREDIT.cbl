@@ -68,7 +68,9 @@
               WHEN SCHED-ADDRESS CONTINUE
               WHEN REMIT-ADDRESS CONTINUE
               WHEN OTHER
+      *           DISPLAY ERRORCOUNTER
                  ADD +1 TO ERRORCOUNTER
+      *           DISPLAY ERRORCOUNTER
                  IF ERRORCOUNTER > 3
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
@@ -76,10 +78,8 @@
                     MOVE "Warning - Invalid Address Type"
                        TO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
-                 GOBACK
            END-EVALUATE.
 
-      *     DISPLAY ADDR-STATE.
 
            IF ADDR-STATE = SPACES
            THEN
@@ -92,6 +92,8 @@
       *        END-IF
               PERFORM VARYING IDX-CONTROL
                  FROM 1 BY 1 UNTIL IDX-CONTROL > STATEZIP-MAX
+                       OR FOUND
+      *              DISPLAY STATE-ACRO (IDX-CONTROL)
                     IF STATE-ACRO (IDX-CONTROL) = ADDR-STATE
                        THEN
                           INITIALIZE WS-STATEZIP-RANGE
@@ -112,12 +114,14 @@
               END-PERFORM
               IF NOT-FOUND
       *           DISPLAY "NOT FOUND"
+      *           DISPLAY ERRORCOUNTER
                  ADD +1 TO ERRORCOUNTER
+      *           DISPLAY ERRORCOUNTER
                  IF ERRORCOUNTER > 3
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
                  ELSE
-                    MOVE "Warning - Invalid Address Type"
+                    MOVE "Warning - Invalid Zip Code"
                        TO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
       *        ELSE
@@ -132,5 +136,6 @@
       *              DISPLAY ADDR-STATE
       *        END-SEARCH
            END-IF.
+
 
       *     DISPLAY "ERRORS IN ADDREDIT: " ERRORCOUNTER.

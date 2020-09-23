@@ -4,6 +4,7 @@
       *           ADD +4 TO ERRORCOUNTER
       *           GOBACK
       *    2-) On case of other problems
+      *           ADD +1 TO ERRORCOUNTER
       *           IF ERRORCOUNTER > 3
       *              ADD +4 TO ERRORCOUNTER
       *              GOBACK
