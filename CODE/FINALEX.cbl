@@ -254,7 +254,7 @@
        100-Main2.
       *    DISPLAY '100-Main'.
            PERFORM 200-PROCESS-DATA.
-           PERFORM 500-Write-ERRORFILE.
+      *    PERFORM 500-Write-ERRORFILE.
       * 9/18 Initializing counters before reading next record
            INITIALIZE WS-RETURN-CODE.
            PERFORM 400-Read-PARTSUPPIN.
@@ -292,9 +292,9 @@
 
            IF NOT WRONG-DATA
               THEN
-                 CALL 'SUPPEDIT' 
+                 CALL 'SUPPEDIT'
                     USING SUPPLIERS, DATA-ERRORS
-           END-IF 
+           END-IF
 
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
@@ -309,6 +309,7 @@
                     USING SUPP-ADDRESS,
                           STATEZIP-TABLE,
                           STATEZIP-MAX,
+                          WS-ADDR-COUNTER,
                           DATA-ERRORS
       *           DISPLAY ERRORCOUNTER
       *
@@ -323,11 +324,13 @@
               END-IF
            END-PERFORM.
 
-           EVALUATE TRUE
-              WHEN WRONG-DATA       PERFORM 208-ProcessError
-              WHEN ERRORCOUNTER > 0 PERFORM 208-ProcessWarning
-              WHEN OTHER            PERFORM 208-ProcessOkay
-           END-EVALUATE.
+           IF WRONG-DATA
+              THEN PERFORM 208-ProcessError
+           ELSE IF ERRORCOUNTER > 0
+              THEN PERFORM 208-ProcessWarning
+           ELSE
+              PERFORM 208-ProcessOkay
+           END-IF.
 
        205-MovePartEdit.
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
@@ -357,19 +360,19 @@
            COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
        205-MoveSupplier.
-           MOVE SUPPLIER-CODE-PO   
+           MOVE SUPPLIER-CODE-PO
               TO SUPPLIER-CODE IN SUPPLIERS.
-           MOVE SUPPLIER-TYPE-PO   
+           MOVE SUPPLIER-TYPE-PO
               TO SUPPLIER-TYPE IN SUPPLIERS.
-           MOVE SUPPLIER-NAME-PO   
+           MOVE SUPPLIER-NAME-PO
               TO SUPPLIER-NAME IN SUPPLIERS.
-           MOVE SUPPLIER-PERF-PO   
+           MOVE SUPPLIER-PERF-PO
               TO SUPPLIER-PERF IN SUPPLIERS.
-           MOVE SUPPLIER-RATING-PO 
+           MOVE SUPPLIER-RATING-PO
               TO SUPPLIER-RATING IN SUPPLIERS.
-           MOVE SUPPLIER-STATUS-PO 
+           MOVE SUPPLIER-STATUS-PO
               TO SUPPLIER-STATUS IN SUPPLIERS.
-           MOVE SUPPLIER-ACT-DATE-PO  
+           MOVE SUPPLIER-ACT-DATE-PO
               TO SUPPLIER-ACT-DATE IN SUPPLIERS.
 
        208-ProcessError.
@@ -397,7 +400,7 @@
       *     DISPLAY PART-SUPP-ADDR-PO.
            PERFORM 209-MoveParts.
            PERFORM 209-MoveAddresses.
-      *     PERFORM 209-MovePurchases.
+           PERFORM 209-MovePurchases.
 
        209-MoveParts.
            MOVE PARTS-OUT TO PARTS-REC.
@@ -520,7 +523,8 @@
 
        600-CLOSE-FILES.
       *     DISPLAY 'CLOSING FILES'.
-           CLOSE  PARTSUPPIN, STATEZIP, ERRORFILE.
+           CLOSE  PARTSUPPIN, STATEZIP, ERRORFILE, PARTS-FILE,
+                  ADDR-FILES, PURC-FILES.
 
 
        2000-ABEND-RTN.

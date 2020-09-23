@@ -14,8 +14,7 @@
 
        WORKING-STORAGE SECTION.
 
-       01  WARNINGS.
-           05 SUBCONTRACTOR-WARNING PIC X(80) VALUE
+       01 SUBCONTRACTOR-WARNING PIC X(80) VALUE
               "Warning - Subcontractor needs to be high quality".
 
       * 01  DATA-STRUCT.
@@ -51,6 +50,21 @@
 
       * 01 CURRENT-LILIAN         PIC S9(9) BINARY.
 
+
+       01 WS-INPUT-DATE-INT        PIC 9(9) COMP.
+       01 WS-PICSTR-IN.
+           05  WS-PICSTR-LTH-IN     PIC S9(4) COMP VALUE 8.
+           05  WS-PICSTR-STR-IN     PIC X(8)  value 'YYYYMMDD'.
+       01 WS-DATE-IN-CEE.
+           05  WS-DATE-IN-LTH-CEE   PIC S9(4) COMP VALUE 8.
+           05  WS-DATE-IN-STR-CEE   PIC X(8).
+       01 FC.
+           05  FC-SEV              PIC S9(4) COMP.
+           05  FC-MSG              PIC S9(4) COMP.
+           05  FC-CTW              PIC X.
+           05  FC-FAC              PIC X(3).
+           05  FC-ISI              PIC S9(8) COMP.
+
        LINKAGE SECTION.
        COPY SUPPLIER. *>SUPP-ADDRESS Copybook
        COPY ERRORS.
@@ -61,7 +75,7 @@
            SUPPLIERS,
            DATA-ERRORS.
 
-           INITIALIZE WARNINGS.
+           INITIALIZE SUBCONTRACTOR-WARNING.
 
            IF SUPPLIER-CODE = SPACES
               ADD 4 TO ERRORCOUNTER
@@ -148,21 +162,20 @@
       *
       *
       *********************************************************
-      *     IF SUPPLIERS-ACT-DATE NOT = SPACES
-      *        MOVE 8 TO Vstring-length IN PICSTR
-      *        MOVE 'YYYYMMDD' TO Vstring-text IN PICSTR
-      *        MOVE 8 TO Vstring-length IN CURRENT-DATE
-      *        MOVE SUPPLIERS-ACT-DATE
-      *           TO Vstring-text IN CURRENT-DATE
-      *        CALL "CEEDAYS" USING CURRENT-DATE, PICSTR,
-      *           CURRENT-LILIAN, FC.
-      *        IF NOT CEE000 THEN
-      *           ADD +1 TO ERRORCOUNTER
-      *           IF ERRORCOUNTER > 3
-      *              ADD +4 TO ERRORCOUNTER
-      *              GOBACK
-      *           ELSE
-      *              MOVE "Warning - Invalid Date for this field"
-      *                 TO ERROR-MESSAGE (ERRORCOUNTER)
-      *           END-IF
-      *     END-IF.
+           IF SUPPLIER-ACT-DATE NOT = SPACES
+      *        DISPLAY SUPPLIER-ACT-DATE
+              MOVE SUPPLIER-ACT-DATE TO WS-DATE-IN-STR-CEE
+      *        DISPLAY WS-DATE-IN-CEE
+              CALL "CEEDAYS" USING WS-DATE-IN-CEE, WS-PICSTR-IN,
+                 WS-INPUT-DATE-INT, FC
+              DISPLAY FC-SEV
+              IF FC-SEV NOT = ZERO THEN
+                 ADD +1 TO ERRORCOUNTER
+                 IF ERRORCOUNTER > 3
+                    ADD +4 TO ERRORCOUNTER
+                    GOBACK
+                 ELSE
+                    MOVE "Warning - Invalid Date for this field"
+                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                 END-IF
+           END-IF.

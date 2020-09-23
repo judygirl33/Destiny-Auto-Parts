@@ -24,10 +24,13 @@
            05  WS-STATEZIP-START       PIC 9(10) VALUE 0.
            05  WS-STATEZIP-END         PIC 9(10) VALUE 0.
 
+       01  TEXT-WARNING               PIC X(80).
+
        LINKAGE SECTION.
        COPY SUPADDRS. *>SUPP-ADDRESS Copybook
        COPY STATEZIP.
        COPY ERRORS.
+       01  THIS-ADDRESS               PIC 9.
 
       *01 ERRORCOUNTER   PIC 9(02)   VALUE ZEROES.
 
@@ -35,6 +38,7 @@
            SUPP-ADDRESS,
            STATEZIP-TABLE,
            STATEZIP-MAX,
+           THIS-ADDRESS,
            DATA-ERRORS.
 
            INITIALIZE CONTROLS-AND-FLAGS.
@@ -75,8 +79,9 @@
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
                  ELSE
-                    MOVE "Warning - Invalid Address Type"
-                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                    STRING "Warning - Invalid Address Type - "
+                       THIS-ADDRESS DELIMITED BY  SIZE
+                       INTO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
            END-EVALUATE.
 
@@ -121,8 +126,9 @@
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
                  ELSE
-                    MOVE "Warning - Invalid Zip Code"
-                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                    STRING "Warning - Invalid Zip Code"
+                       THIS-ADDRESS DELIMITED BY  SIZE
+                       INTO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
       *        ELSE
       *           DISPLAY ADDR-STATE
