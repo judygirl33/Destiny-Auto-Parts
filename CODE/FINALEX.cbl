@@ -292,9 +292,9 @@
 
            IF NOT WRONG-DATA
               THEN
-                 CALL 'SUPPEDIT'
+                 CALL 'SUPPEDIT' 
                     USING SUPPLIERS, DATA-ERRORS
-           END-IF
+           END-IF 
 
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
@@ -357,19 +357,19 @@
            COMPUTE WS-WEEKS-LEAD-AUX = 0 + WEEKS-LEAD-TIME-OUT.
 
        205-MoveSupplier.
-           MOVE SUPPLIER-CODE-PO
+           MOVE SUPPLIER-CODE-PO   
               TO SUPPLIER-CODE IN SUPPLIERS.
-           MOVE SUPPLIER-TYPE-PO
+           MOVE SUPPLIER-TYPE-PO   
               TO SUPPLIER-TYPE IN SUPPLIERS.
-           MOVE SUPPLIER-NAME-PO
+           MOVE SUPPLIER-NAME-PO   
               TO SUPPLIER-NAME IN SUPPLIERS.
-           MOVE SUPPLIER-PERF-PO
+           MOVE SUPPLIER-PERF-PO   
               TO SUPPLIER-PERF IN SUPPLIERS.
-           MOVE SUPPLIER-RATING-PO
+           MOVE SUPPLIER-RATING-PO 
               TO SUPPLIER-RATING IN SUPPLIERS.
-           MOVE SUPPLIER-STATUS-PO
+           MOVE SUPPLIER-STATUS-PO 
               TO SUPPLIER-STATUS IN SUPPLIERS.
-           MOVE SUPPLIER-ACT-DATE-PO
+           MOVE SUPPLIER-ACT-DATE-PO  
               TO SUPPLIER-ACT-DATE IN SUPPLIERS.
 
        208-ProcessError.
@@ -530,6 +530,7 @@
        3000-LoadInitialize.
            INITIALIZE STATEZIP-TABLE.
            INITIALIZE STATEZIP-INDEX.
+           MOVE 1 TO STATEZIP-INDEX.
            PERFORM 3100-LoadStateTable UNTIL STATEZIP-EOF.
 
        3100-LoadStateTable.
@@ -537,6 +538,7 @@
            MOVE STATEZIP-INDEX TO STATEZIP-MAX.
 
        3150-ReadNextState.
+      *     DISPLAY STATEZIP-INDEX.
            READ STATEZIP INTO STATEZIP-LIST(STATEZIP-INDEX)
               AT END
                  MOVE 'Y' TO STATEZIP-EOF-WS
