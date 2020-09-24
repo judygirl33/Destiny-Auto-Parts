@@ -24,10 +24,13 @@
            05  WS-STATEZIP-START       PIC 9(10) VALUE 0.
            05  WS-STATEZIP-END         PIC 9(10) VALUE 0.
 
+       01  TEXT-WARNING               PIC X(80).
+
        LINKAGE SECTION.
        COPY SUPADDRS. *>SUPP-ADDRESS Copybook
        COPY STATEZIP.
        COPY ERRORS.
+       01  THIS-ADDRESS               PIC 9.
 
       *01 ERRORCOUNTER   PIC 9(02)   VALUE ZEROES.
 
@@ -35,6 +38,7 @@
            SUPP-ADDRESS,
            STATEZIP-TABLE,
            STATEZIP-MAX,
+           THIS-ADDRESS,
            DATA-ERRORS.
 
            INITIALIZE CONTROLS-AND-FLAGS.
@@ -68,18 +72,19 @@
               WHEN SCHED-ADDRESS CONTINUE
               WHEN REMIT-ADDRESS CONTINUE
               WHEN OTHER
+      *           DISPLAY ERRORCOUNTER
                  ADD +1 TO ERRORCOUNTER
+      *           DISPLAY ERRORCOUNTER
                  IF ERRORCOUNTER > 3
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
                  ELSE
-                    MOVE "Warning - Invalid Address Type"
-                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                    STRING "Warning - Invalid Address Type - "
+                       THIS-ADDRESS DELIMITED BY  SIZE
+                       INTO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
-                 GOBACK
            END-EVALUATE.
 
-      *     DISPLAY ADDR-STATE.
 
            IF ADDR-STATE = SPACES
            THEN
@@ -92,6 +97,8 @@
       *        END-IF
               PERFORM VARYING IDX-CONTROL
                  FROM 1 BY 1 UNTIL IDX-CONTROL > STATEZIP-MAX
+                       OR FOUND
+      *              DISPLAY STATE-ACRO (IDX-CONTROL)
                     IF STATE-ACRO (IDX-CONTROL) = ADDR-STATE
                        THEN
                           INITIALIZE WS-STATEZIP-RANGE
@@ -112,13 +119,16 @@
               END-PERFORM
               IF NOT-FOUND
       *           DISPLAY "NOT FOUND"
+      *           DISPLAY ERRORCOUNTER
                  ADD +1 TO ERRORCOUNTER
+      *           DISPLAY ERRORCOUNTER
                  IF ERRORCOUNTER > 3
                     ADD +4 TO ERRORCOUNTER
                     GOBACK
                  ELSE
-                    MOVE "Warning - Invalid Address Type"
-                       TO ERROR-MESSAGE (ERRORCOUNTER)
+                    STRING "Warning - Invalid Zip Code"
+                       THIS-ADDRESS DELIMITED BY  SIZE
+                       INTO ERROR-MESSAGE (ERRORCOUNTER)
                  END-IF
       *        ELSE
       *           DISPLAY ADDR-STATE
@@ -132,5 +142,6 @@
       *              DISPLAY ADDR-STATE
       *        END-SEARCH
            END-IF.
+
 
       *     DISPLAY "ERRORS IN ADDREDIT: " ERRORCOUNTER.
