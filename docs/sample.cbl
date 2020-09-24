@@ -1,0 +1,16 @@
+       IDENTIFICATION DIVISION.
+      *SAMPLE CODE FOR GITHUB
+       PROGRAM-ID. SAMPLE.
+       AUTHOR. Enterprise Cobol.
+
+
+       ENVIRONMENT DIVISION.
+
+       FILE DIVISION.
+       OPEN <FILE NAME>.
+       CLOSE <FILE NAME>.
+
+       PROCEDURE DIVISION.
+
+       9999-END-PROGRAM.
+           GOBACK
