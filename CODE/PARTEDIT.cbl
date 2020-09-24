@@ -1,11 +1,11 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PARTEDIT.
-       AUTHOR. IVANNA COLN.
+       AUTHOR. IVANNA COLAN.
       ******************************************************************
       * validates the data of the PARTs PORTION OF a PARTSUPP record
       *9/18 used 05 variables instead of PARTS group variable to avoid
-      * issue with COMP field weeks-lead-time. It still shows incorrect
-      *  ly value fo that field.
+      * issue with COMP field weeks-lead-time.
+      *
       ******************************************************************
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -42,36 +42,44 @@
            SPEC-NUMBER, GOVT-COMML-CODE, BLUEPRINT-NUMBER,
            UNIT-OF-MEASURE, WEEKS-LEAD-TIME, VEHICLE-MAKE,
            VEHICLE-MODEL, VEHICLE-YEAR, LS-PARTEDIT-ERRORCOUNTER.
+
+      *9/24 WHEN A MANDATORY FIELD IS BLANK, WE ADD 4 TO ERRORCOUNTER TO
+      * CONSIDER THE RECORD WRONG AND NOT KEEP ANALYZING THE REST>>>>>>
       *Validating PART-NUMBER should NOT be blank
            IF PART-NUMBER = SPACES
-                THEN  ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
+                THEN  ADD +4 TO LS-PARTEDIT-ERRORCOUNTER
+                      GOBACK
            END-IF.
       *Validating PART-NAME should NOT be blank
            IF PART-NAME = SPACES
-                THEN  ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
+                THEN  ADD +4 TO LS-PARTEDIT-ERRORCOUNTER
+                      GOBACK
            END-IF.
       *Validating VEHICLE-MAKE should NOT be blank
            IF VEHICLE-MAKE = SPACES
-                THEN  ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
+                THEN  ADD +4 TO LS-PARTEDIT-ERRORCOUNTER
+                      GOBACK
            END-IF.
       *Validating VEHICLE-MODEL should NOT be blank
            IF VEHICLE-MODEL = SPACES
-                THEN  ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
+                THEN  ADD +4 TO LS-PARTEDIT-ERRORCOUNTER
+                      GOBACK
            END-IF.
       *Validating VEHICLE-YEAR should NOT be blank
            IF VEHICLE-YEAR = '0000' OR VEHICLE-YEAR = SPACES
-                THEN  ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
+                THEN  ADD +4 TO LS-PARTEDIT-ERRORCOUNTER
+                      GOBACK
            END-IF.
       *Validating VEHICLE MAKE to be one of the 88 level fields
            EVALUATE TRUE
-              WHEN VEHICLE-MAKE = 'CHR' DISPLAY 'V-MAKE CHR'
-              WHEN VEHICLE-MAKE = 'FOR' DISPLAY 'V-MAKE FOR'
-              WHEN VEHICLE-MAKE = 'GM'  DISPLAY 'V-MAKE GM'
-              WHEN VEHICLE-MAKE = 'VW' DISPLAY 'V-MAKE VW'
-              WHEN VEHICLE-MAKE = 'TOY' DISPLAY 'V-MAKE TOY'
-              WHEN VEHICLE-MAKE = 'JAG' DISPLAY 'V-MAKE JAG'
-              WHEN VEHICLE-MAKE = 'PEU' DISPLAY 'V-MAKE PEU'
-              WHEN VEHICLE-MAKE = 'BMW' DISPLAY 'V-MAKE BMW'
+              WHEN VEHICLE-MAKE = 'CHR' CONTINUE
+              WHEN VEHICLE-MAKE = 'FOR' CONTINUE
+              WHEN VEHICLE-MAKE = 'GM'  CONTINUE
+              WHEN VEHICLE-MAKE = 'VW' CONTINUE
+              WHEN VEHICLE-MAKE = 'TOY' CONTINUE
+              WHEN VEHICLE-MAKE = 'JAG' CONTINUE
+              WHEN VEHICLE-MAKE = 'PEU' CONTINUE
+              WHEN VEHICLE-MAKE = 'BMW' CONTINUE
               WHEN OTHER ADD +1 TO LS-PARTEDIT-ERRORCOUNTER
            END-EVALUATE.
 
