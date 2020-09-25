@@ -287,6 +287,10 @@
               VEHICLE-YEAR-OUT,
               ERRORCOUNTER.
       *     DISPLAY ERRORCOUNTER.
+           
+           IF ERRORCOUNTER > 3
+              MOVE  'Y' TO DATA-ERROR-FLAG
+           END-IF.
 
            PERFORM 205-MoveSupplier.
 
