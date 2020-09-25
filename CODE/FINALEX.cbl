@@ -233,6 +233,9 @@
        01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
 
 
+       01 WS-QUANTITY-AUX                   PIC S9(8) COMP.
+       01 WS-UNIT-PRICE-AUX                 PIC S9(7)V99 COMP-3.
+
        PROCEDURE DIVISION.
 
        MAIN.
@@ -273,24 +276,34 @@
       *9/16 Added the call of PARTEDIT SUBPROGRAM
            PERFORM 205-MovePartEdit.
 
+           INITIALIZE DATA-ERRORS.
 
-           CALL 'PARTEDIT' USING
-              PART-NUMBER-OUT,
-              PART-NAME-OUT,
-              SPEC-NUMBER-OUT,
-              GOVT-COMML-CODE-OUT,
-              BLUEPRINT-NUMBER-OUT,
-              UNIT-OF-MEASURE-OUT,
-              WS-WEEKS-LEAD-AUX,
-              VEHICLE-MAKE-OUT,
-              VEHICLE-MODEL-OUT,
-              VEHICLE-YEAR-OUT,
-              ERRORCOUNTER.
+      * From PARTSUPPIN file
+      *    MOVE PARTS IN PART-SUPP-ADDR-PO  TO PARTS-OUT.
+      *    MOVE SUPPLIERS IN PART-SUPP-ADDR-PO    TO SUPPLIERS-OUT.
+      *    MOVE SUPP-ADDRESS IN PART-SUPP-ADDR-PO   TO SUPP-ADDRESS-OUT.
+      *    MOVE PURCHASE-ORDER     TO PURCHASE-ORDER-OUT.
+      *    DISPLAY '200-PROCESS-DATA'.
+      *9/16 Added the call of PARTEDIT SUBPROGRAM
+           PERFORM 205-MovePartEdit.
+
+           IF NOT WRONG-DATA
+              CALL 'PARTEDIT' USING
+                 PART-NUMBER-OUT,
+                 PART-NAME-OUT,
+                 SPEC-NUMBER-OUT,
+                 GOVT-COMML-CODE-OUT,
+                 BLUEPRINT-NUMBER-OUT,
+                 UNIT-OF-MEASURE-OUT,
+                 WS-WEEKS-LEAD-AUX,
+                 VEHICLE-MAKE-OUT,
+                 VEHICLE-MODEL-OUT,
+                 VEHICLE-YEAR-OUT,
+                 ERRORCOUNTER
+           END-IF.
       *     DISPLAY ERRORCOUNTER.
            
-           IF ERRORCOUNTER > 3
-              MOVE  'Y' TO DATA-ERROR-FLAG
-           END-IF.
+           PERFORM 9000-CheckErrorCodes.
 
            PERFORM 205-MoveSupplier.
 
@@ -298,7 +311,9 @@
               THEN
                  CALL 'SUPPEDIT'
                     USING SUPPLIERS, DATA-ERRORS
-           END-IF
+           END-IF.
+
+           PERFORM 9000-CheckErrorCodes.
 
       * Starting checking the addresses on PARTSUPP.
            INITIALIZE STATEZIP-INDEX.
@@ -323,9 +338,20 @@
       *         88 field so the next checks can be avoided
       *         (performance improvement)
       *
-              IF ERRORCOUNTER > 3
-                 MOVE  'Y' TO DATA-ERROR-FLAG
-              END-IF
+              PERFORM 9000-CheckErrorCodes
+           END-PERFORM.
+
+           PERFORM
+              VARYING WS-ADDR-COUNTER
+              FROM 1 BY 1
+              UNTIL WS-ADDR-COUNTER > 3 OR WRONG-DATA
+                 PERFORM 205-MovePurchOrder
+                 IF NOT WRONG-DATA
+                      CALL 'POEDIT' USING
+                          PURCHASE-ORDERS,
+                          DATA-ERRORS
+                 END-IF
+                 PERFORM 9000-CheckErrorCodes
            END-PERFORM.
 
            IF WRONG-DATA
@@ -337,6 +363,17 @@
            END-IF.
 
        205-MovePartEdit.
+
+           IF WEEKS-LEAD-TIME-PO IS NOT NUMERIC 
+              ADD 4 TO ERRORCOUNTER
+              EXIT PARAGRAPH
+           END-IF.
+
+           IF VEHICLE-YEAR-PO IS NOT NUMERIC 
+              ADD 4 TO ERRORCOUNTER
+              EXIT PARAGRAPH
+           END-IF.
+
       *9/17 CHANGE added as workaround of COMP weeks-lead-time in subprogram
            MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO TO PART-NUMBER-OUT
               IN WS-PART-SUPP-ADDR-PO-OUT.
@@ -378,6 +415,31 @@
               TO SUPPLIER-STATUS IN SUPPLIERS.
            MOVE SUPPLIER-ACT-DATE-PO
               TO SUPPLIER-ACT-DATE IN SUPPLIERS.
+
+       205-MovePurchOrder.
+           
+           IF QUANTITY-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
+              ADD 4 TO ERRORCOUNTER 
+              EXIT PARAGRAPH
+           END-IF.
+
+           IF UNIT-PRICE-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
+              ADD 4 TO ERRORCOUNTER
+              EXIT PARAGRAPH
+           END-IF.
+
+           MOVE PO-NUMBER-PO (WS-ADDR-COUNTER) 
+              TO PO-NUMBER IN PURCHASE-ORDERS.
+           MOVE BUYER-CODE-PO (WS-ADDR-COUNTER) 
+              TO  BUYER-CODE IN PURCHASE-ORDERS.
+           COMPUTE QUANTITY IN PURCHASE-ORDERS = 
+              0 + QUANTITY-PO (WS-ADDR-COUNTER).
+           COMPUTE UNIT-PRICE IN PURCHASE-ORDERS = 
+              0 + UNIT-PRICE-PO (WS-ADDR-COUNTER).
+           MOVE ORDER-DATE-PO (WS-ADDR-COUNTER) 
+              TO ORDER-DATE IN PURCHASE-ORDERS.
+           MOVE DELIVERY-DATE-PO (WS-ADDR-COUNTER) 
+              TO DELIVERY-DATE IN PURCHASE-ORDERS.
 
        208-ProcessError.
            MOVE "Wrong Data!!" TO ERRORFILE-REC.
@@ -433,6 +495,8 @@
            MOVE UNIT-PRICE-PO(WS-ADDR-COUNTER) TO REC-UNIT-PRICE.
            MOVE ORDER-DATE-PO(WS-ADDR-COUNTER) TO REC-ORDER-DATE.
            MOVE DELIVERY-DATE-PO(WS-ADDR-COUNTER) TO REC-DELIVERY-DATE.
+           COMPUTE WS-QUANTITY-AUX = 0 + REC-QUANTITY.
+           COMPUTE WS-UNIT-PRICE-AUX = 0 + REC-UNIT-PRICE.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -553,3 +617,8 @@
            END-READ.
       *     DISPLAY STATEZIP-LIST(STATEZIP-INDEX).
            ADD 1 TO STATEZIP-INDEX.
+
+       9000-CheckErrorCodes.
+           IF ERRORCOUNTER > 3
+              MOVE  'Y' TO DATA-ERROR-FLAG
+           END-IF.
