@@ -34,6 +34,9 @@
            SELECT PURC-FILES  ASSIGN TO PURCHASE
            FILE STATUS IS OUT-PURCFILE-KEY.
 
+           SELECT GOODDATA ASSIGN TO GOODDATA
+           FILE STATUS IS IN-GOODPART-KEY.
+
        DATA DIVISION.
        FILE SECTION.
        FD  PARTSUPPIN
@@ -43,6 +46,14 @@
            BLOCK CONTAINS 0 RECORDS
            DATA RECORD IS PARTSUPPIN-REC.
        01  PARTSUPPIN-REC     PIC X(473).
+
+       FD  GOODDATA 
+           RECORDING MODE IS F
+           LABEL RECORDS ARE STANDARD
+           RECORD CONTAINS 473 CHARACTERS
+           BLOCK CONTAINS 0 RECORDS
+           DATA RECORD IS GOODDATA-REC.
+       01  GOODDATA-REC     PIC X(473).
 
        FD  STATEZIP
            RECORDING MODE IS F
@@ -137,6 +148,10 @@
       * File status key for input File PARTSUPP
            05 IN-PARTSUPP-KEY           PIC X(2).
                 88 CODE-WRITE               VALUE SPACES.
+
+           05 IN-GOODPART-KEY           PIC X(2).
+                88 CODE-WRITE               VALUE SPACES.
+
 
       * File status key for input File STATEZIP
            05 IN-STATEZIP-KEY           PIC X(2).
@@ -302,7 +317,7 @@
                  ERRORCOUNTER
            END-IF.
       *     DISPLAY ERRORCOUNTER.
-
+           
            PERFORM 9000-CheckErrorCodes.
 
            PERFORM 205-MoveSupplier.
@@ -364,12 +379,12 @@
 
        205-MovePartEdit.
 
-           IF WEEKS-LEAD-TIME-PO IS NOT NUMERIC
+           IF WEEKS-LEAD-TIME-PO IS NOT NUMERIC 
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
 
-           IF VEHICLE-YEAR-PO IS NOT NUMERIC
+           IF VEHICLE-YEAR-PO IS NOT NUMERIC 
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
@@ -417,28 +432,28 @@
               TO SUPPLIER-ACT-DATE IN SUPPLIERS.
 
        205-MovePurchOrder.
+           
+           IF QUANTITY-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
+              ADD 4 TO ERRORCOUNTER 
+              EXIT PARAGRAPH
+           END-IF.
 
-           IF QUANTITY-PO (WS-ADDR-COUNTER) IS NOT NUMERIC
+           IF UNIT-PRICE-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
 
-           IF UNIT-PRICE-PO (WS-ADDR-COUNTER) IS NOT NUMERIC
-              ADD 4 TO ERRORCOUNTER
-              EXIT PARAGRAPH
-           END-IF.
-
-           MOVE PO-NUMBER-PO (WS-ADDR-COUNTER)
+           MOVE PO-NUMBER-PO (WS-ADDR-COUNTER) 
               TO PO-NUMBER IN PURCHASE-ORDERS.
-           MOVE BUYER-CODE-PO (WS-ADDR-COUNTER)
+           MOVE BUYER-CODE-PO (WS-ADDR-COUNTER) 
               TO  BUYER-CODE IN PURCHASE-ORDERS.
-           COMPUTE QUANTITY IN PURCHASE-ORDERS =
+           COMPUTE QUANTITY IN PURCHASE-ORDERS = 
               0 + QUANTITY-PO (WS-ADDR-COUNTER).
-           COMPUTE UNIT-PRICE IN PURCHASE-ORDERS =
+           COMPUTE UNIT-PRICE IN PURCHASE-ORDERS = 
               0 + UNIT-PRICE-PO (WS-ADDR-COUNTER).
-           MOVE ORDER-DATE-PO (WS-ADDR-COUNTER)
+           MOVE ORDER-DATE-PO (WS-ADDR-COUNTER) 
               TO ORDER-DATE IN PURCHASE-ORDERS.
-           MOVE DELIVERY-DATE-PO (WS-ADDR-COUNTER)
+           MOVE DELIVERY-DATE-PO (WS-ADDR-COUNTER) 
               TO DELIVERY-DATE IN PURCHASE-ORDERS.
 
        208-ProcessError.
@@ -467,6 +482,7 @@
            PERFORM 209-MoveParts.
            PERFORM 209-MoveAddresses.
            PERFORM 209-MovePurchases.
+           PERFORM 209-MoveGoodData.
 
        209-MoveParts.
            MOVE PARTS-OUT TO PARTS-REC.
@@ -497,6 +513,10 @@
            MOVE DELIVERY-DATE-PO(WS-ADDR-COUNTER) TO REC-DELIVERY-DATE.
            COMPUTE WS-QUANTITY-AUX = 0 + REC-QUANTITY.
            COMPUTE WS-UNIT-PRICE-AUX = 0 + REC-UNIT-PRICE.
+       
+       209-MoveGoodData.
+           MOVE PART-SUPP-ADDR-PO TO GOODDATA-REC.
+           WRITE GOODDATA-REC.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -564,6 +584,15 @@
                 GO TO 2000-ABEND-RTN
            END-IF.
 
+           OPEN OUTPUT GOODDATA.
+      *    Output File Status Checking for ERRORFILE
+           IF IN-GOODPART-KEY NOT = '00' THEN
+                DISPLAY
+                        '---------------------------------------------'
+                DISPLAY 'File Problem openning WARNING'
+                GO TO 2000-ABEND-RTN
+           END-IF.
+
        400-Read-PARTSUPPIN.
            READ PARTSUPPIN INTO PART-SUPP-ADDR-PO
       * Set AT END Switch
@@ -592,7 +621,7 @@
        600-CLOSE-FILES.
       *     DISPLAY 'CLOSING FILES'.
            CLOSE  PARTSUPPIN, STATEZIP, ERRORFILE, PARTS-FILE,
-                  ADDR-FILES, PURC-FILES.
+                  ADDR-FILES, PURC-FILES, GOODDATA.
 
 
        2000-ABEND-RTN.
