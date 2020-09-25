@@ -302,7 +302,7 @@
                  ERRORCOUNTER
            END-IF.
       *     DISPLAY ERRORCOUNTER.
-           
+
            PERFORM 9000-CheckErrorCodes.
 
            PERFORM 205-MoveSupplier.
@@ -364,12 +364,12 @@
 
        205-MovePartEdit.
 
-           IF WEEKS-LEAD-TIME-PO IS NOT NUMERIC 
+           IF WEEKS-LEAD-TIME-PO IS NOT NUMERIC
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
 
-           IF VEHICLE-YEAR-PO IS NOT NUMERIC 
+           IF VEHICLE-YEAR-PO IS NOT NUMERIC
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
@@ -417,28 +417,28 @@
               TO SUPPLIER-ACT-DATE IN SUPPLIERS.
 
        205-MovePurchOrder.
-           
-           IF QUANTITY-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
-              ADD 4 TO ERRORCOUNTER 
-              EXIT PARAGRAPH
-           END-IF.
 
-           IF UNIT-PRICE-PO (WS-ADDR-COUNTER) IS NOT NUMERIC 
+           IF QUANTITY-PO (WS-ADDR-COUNTER) IS NOT NUMERIC
               ADD 4 TO ERRORCOUNTER
               EXIT PARAGRAPH
            END-IF.
 
-           MOVE PO-NUMBER-PO (WS-ADDR-COUNTER) 
+           IF UNIT-PRICE-PO (WS-ADDR-COUNTER) IS NOT NUMERIC
+              ADD 4 TO ERRORCOUNTER
+              EXIT PARAGRAPH
+           END-IF.
+
+           MOVE PO-NUMBER-PO (WS-ADDR-COUNTER)
               TO PO-NUMBER IN PURCHASE-ORDERS.
-           MOVE BUYER-CODE-PO (WS-ADDR-COUNTER) 
+           MOVE BUYER-CODE-PO (WS-ADDR-COUNTER)
               TO  BUYER-CODE IN PURCHASE-ORDERS.
-           COMPUTE QUANTITY IN PURCHASE-ORDERS = 
+           COMPUTE QUANTITY IN PURCHASE-ORDERS =
               0 + QUANTITY-PO (WS-ADDR-COUNTER).
-           COMPUTE UNIT-PRICE IN PURCHASE-ORDERS = 
+           COMPUTE UNIT-PRICE IN PURCHASE-ORDERS =
               0 + UNIT-PRICE-PO (WS-ADDR-COUNTER).
-           MOVE ORDER-DATE-PO (WS-ADDR-COUNTER) 
+           MOVE ORDER-DATE-PO (WS-ADDR-COUNTER)
               TO ORDER-DATE IN PURCHASE-ORDERS.
-           MOVE DELIVERY-DATE-PO (WS-ADDR-COUNTER) 
+           MOVE DELIVERY-DATE-PO (WS-ADDR-COUNTER)
               TO DELIVERY-DATE IN PURCHASE-ORDERS.
 
        208-ProcessError.
