@@ -18,7 +18,7 @@
            FILE STATUS IS OUT-ERRORFILE-KEY.
 
       * Output Control Break Report
-           SELECT PRINT-LINE ASSIGN TO PRTLINE.
+      *     SELECT PRINT-LINE ASSIGN TO PRTLINE.
 
 
            SELECT RPTFILE ASSIGN TO RPTFILE
@@ -38,9 +38,9 @@
 
        FD  RPTFILE
            RECORDING MODE IS F
-           RECORD CONTAINS 133 CHARACTERS
-           DATA RECORD IS RPT-Rec.
-       01  RPT-REC PIC X(133).
+           RECORD CONTAINS   132 CHARACTERS
+           DATA RECORD IS RPT-REC.
+       01  RPT-REC PIC X(132).
 
 
        FD  ERRORFILE
@@ -52,27 +52,13 @@
        01  ERRORFILE-REC PIC X(500).
 
 
-       FD  PRINT-LINE RECORDING MODE F
-           LABEL RECORDS ARE STANDARD
-           RECORD CONTAINS 133 CHARACTERS
-           BLOCK CONTAINS 0 RECORDS
-           DATA RECORD IS PRINT-REC.
-       01  PRINT-REC      PIC X(133).
+      *    FD  PRINT-LINE RECORDING MODE F
+      *        LABEL RECORDS ARE STANDARD
+      *        RECORD CONTAINS 132 CHARACTERS
+      *        BLOCK CONTAINS 0 RECORDS
+      *        DATA RECORD ISPRINT-REC.
+      *    01  PRINT-REC      PIC X(132).
 
-
-
-
-         01  PARTS-REC.
-           05  REC-PART-NUMBER       PIC X(23) VALUE SPACES.
-           05  REC-PART-NAME         PIC X(14) VALUE SPACES.
-           05  REC-SPEC-NUMBER       PIC X(07) VALUE SPACES.
-           05  REC-GOVT-COMML-CODE   PIC X(01) VALUE SPACES.
-           05  REC-BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES.
-           05  REC-UNIT-OF-MEASURE   PIC X(03) VALUE SPACES.
-           05  REC-WEEKS-LEAD-TIME   PIC S9(04) COMP VALUE ZEROS.
-           05  REC-VEHICLE-MAKE      PIC X(03) VALUE SPACES.
-           05  REC-VEHICLE-MODEL     PIC X(05) VALUE SPACES.
-           05  REC-VEHICLE-YEAR      PIC X(04) VALUE '0000'.
 
        WORKING-STORAGE SECTION.
            COPY PARTS. *>Parts Copybook
@@ -168,95 +154,14 @@
 
 
        01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
+       01 WS-LOOP-COUNTER                   PIC 9 VALUE 1.
 
+       COPY OUTRPT.
 
-
-       01 WS-BREAK-CONTROLS.
-           05 WS-CONTROL-KEY            PIC X(23). *> Hold/Control Key
-
- *************************************************************
-      ****** Report headings ******
-      *************************************************************
-       01 WS-BLANK-LINE                 PIC X(133)     VALUE SPACES.
-       01 WS-HEADER.
-          05 FILLER              PIC X(3)       VALUE SPACES.
-          05 FILLER              PIC X(18)      VALUE 'Part Name'.
-          05 FILLER              PIC X(06)      VALUE SPACE.
-          05 FILLER              PIC X(15)      VALUE 'Weeks Lead Time'.
-          05 FILLER              PIC X(5)       VALUE SPACES.
-          05 FILLER              PIC X(12)       VALUE 'Vehicle Make'.
-          05 FILLER              PIC X(5)       VALUE SPACES.
-          05 FILLER              PIC X(13)       VALUE 'Supplier Name'.
-          05 FILLER              PIC X(5)       VALUE SPACES.
-          05 FILLER              PIC X(15)     VALUE 'Supplier Rating'.
-
-       01 WS-UNDERLINE.
-           05 FILLER                    PIC X(3)       VALUE SPACES.
-           05 FILLER                    PIC X(23)      VALUE ALL '='.
-           05 FILLER                    PIC X(01)      VALUE SPACE.
-           05 FILLER                    PIC X(15)      VALUE ALL '='.
-           05 FILLER                    PIC X(05)      VALUE SPACE.
-           05 FILLER                    PIC X(12)       VALUE ALL '='.
-           05 FILLER                    PIC X(5)       VALUE SPACES.
-           05 FILLER                    PIC X(13)        VALUE ALL '='.
-           05 FILLER                    PIC X(05)      VALUE SPACES.
-           05 FILLER                    PIC X(15)       VALUE ALL '='.
-
-
-       01 WS-PARTS-DATA-OUT.
-          05 FILLER               PIC X(3)       VALUE SPACES.
-          05 PART-NUMBER-OUT      PIC X(23)      VALUE SPACES.
-          05 FILLER               PIC X(08)      VALUE SPACES.
-          05 WEEKS-LEAD-TIME-OUT  PIC 9(03)     VALUE ZERO.
-          05 FILLER               PIC X(10)       VALUE SPACES.
-          05 VEHICLE-MAKE-OUT     PIC X(10)       VALUE SPACES.
-          05 FILLER               PIC X(7)       VALUE SPACES.
-          05 SUPPLIER-NAME-OUT    PIC X(15)     VALUE SPACES.
-          05 FILLER               PIC X(3)       VALUE SPACES.
-          05 SUPPLIER-RATING-OUT  PIC X(15)     VALUE SPACES.
-
-
-       01 WS-ADDRESSES.
-           05 FILLER                PIC X(3)  VALUE SPACES.
-           05 FILLER                PIC X(15) VALUE 'Order Address: '.
-           05 ORDER-ADDRESS         PIC X(15) VALUE SPACES.
-           05 FILLER                PIC X(100) VALUE SPACE.
-           05 FILLER                PIC X(15) VALUE 'Sched Address: '.
-           05 SCHED-ADDRESS         PIC X(15) VALUE SPACES.
-           05 FILLER                PIC X(100) VALUE SPACE.
-           05 FILLER                PIC X(15) VALUE 'Remit Address: '.
-           05 REMIT-ADDRESS         PIC X(15) VALUE SPACE.
-
-
-
-       01 WS-BOTTOM.
-           05 FILLER                PIC X(3)  VALUE SPACES.
-           05 FILLER                PIC X(133) VALUE SPACES.
-           05 FILLER                PIC X(34) VALUE
-           'Total # Purchase Orders: '.
-           05 WS-TOTAL-PURCHASE-ORDER-O  PIC 9(03) VALUE ZERO.
-           05 FILLER                PIC X(100) VALUE SPACE.
-           05 FILLER                PIC X(28) VALUE
-           'Total Price Purchase Orders:'.
-           05 WS-TOTAL-PRICE-O      PIC $$$,$$$,$$$,$$$.99 VALUE ZERO.
-
-           05 FILLER                 PIC X(33) VALUE SPACE.
-           05 FILLER    PIC X(34) VALUE
-           'Total Quantity in Purchase Orders:'.
-           05 WS-TOTAL-QTY-PURCH-ORDER-O PIC 9(04) VALUE 0.
-           05 FILLER                PIC X(133) VALUE SPACES.
-           05 FILLER                PIC X(90) VALUE ALL '='.
 
        01 WS-FLAGS.
            05 WS-LINE-KTR               PIC 9(4) VALUE 0.
 
-
-       01 WS-COUNTERS-AND-ACCUMULATORS.
-           05 WS-CONTROL-BREAK-TOTAL        PIC 9(7)V99 VALUE ZERO.
-           05 WS-PARTNUMBER-CTR             PIC 9(04) VALUE ZERO.
-           05 WS-TOTAL-PURCH-ORDERS         PIC 9(04) VALUE ZERO.
-           05 WS-TOTAL-QTY-IN-PURCH-ORDERS  PIC 9(04) VALUE ZERO.
-           05 WS-TOTAL-PRICE-PURCH-ORDERS   PIC 9(08)V99 VALUE ZERO.
 
        PROCEDURE DIVISION.
 
@@ -268,20 +173,24 @@
 
        000-Housekeeping.
       * Initialization Routine
-           INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
+           INITIALIZE PART-SUPP-ADDR-PO,
+                      WS-PART-SUPP-ADDR-PO-OUT,
+                      WS-CONTROL-KEY.
       * Priming Read
            PERFORM 300-Open-Files.
-           MOVE SPACES TO PRINT-REC.
+           MOVE SPACES TO RPT-REC.
            PERFORM 400-Read-GOODDATAIN.
-           MOVE PART-NUMBER-PO TO WS-CONTROL-KEY.
-
+           PERFORM 1000-WRITE-HEADER.
+           PERFORM 150-INIT-WS-FIELDS.
+           MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO
+               TO WS-CONTROL-KEY.
 
 
        100-Main2.
       *    DISPLAY '100-Main'.
-           PERFORM 200-PROCESS-DATA.
-           PERFORM 700-CONTROL-BREAK.
-           PERFORM 500-Write-ERRORFILE.
+           PERFORM 205-CONTROL-BREAK.
+           PERFORM 210-CALCULATE.
+           PERFORM 220-WRITE-DATA.
       * 9/18 Initializing counters before reading next record
       *S    INITIALIZE
            PERFORM 400-Read-GOODDATAIN.
@@ -289,61 +198,98 @@
 
        150-INIT-WS-FIELDS.
            INITIALIZE WS-COUNTERS-AND-ACCUMULATORS.
-           INITIALIZE WS-ADDRESSES, WS-BOTTOM.
+           INITIALIZE WS-ADDRESSES-1, WS-ADDRESSES-2, WS-ADDRESSES-3.
+           INITIALIZE WS-FOOTER-1, WS-FOOTER-2, WS-FOOTER-3.
 
-       200-PROCESS-DATA.
-           IF NOT GOODDATA-END-OF-FILE   *> No duplicating last record
-              IF WS-CONTROL-KEY = PART-NUMBER-PO *> Control Break Conditional
-                THEN    PERFORM 210-CALCULATE
-                        PERFORM 700-CONTROL-BREAK
-                        PERFORM 400-Read-GOODDATAIN
-                ELSE
-                        WRITE PRINT-REC FROM WS-PARTS-DATA-OUT
-                        WRITE PRINT-REC FROM WS-ADDRESSES
-                        WRITE PRINT-REC FROM WS-BOTTOM
-                        PERFORM 700-CONTROL-BREAK
-                        INITIALIZE WS-ADDRESSES, WS-BOTTOM
-                        PERFORM 210-CALCULATE
-                        PERFORM 400-Read-GOODDATAIN
-             END-IF
+       205-CONTROL-BREAK.
+           IF WS-CONTROL-KEY NOT EQUAL
+              PART-NUMBER-PO THEN
+              PERFORM 1000-WRITE-FOOTER
+              PERFORM 1000-WRITE-HEADER
+              PERFORM 150-INIT-WS-FIELDS
+              MOVE PART-NUMBER-PO TO WS-CONTROL-KEY
            END-IF.
 
 
        210-CALCULATE.
-      * To get PartNumber, Weekslead time, vehicle make, Suppliers Name
-      * and SUPPLIER RATING
-           MOVE PART-NUMBER-PO TO PART-NUMBER-OUT IN WS-PARTS-DATA-OUT.
-           MOVE WEEKS-LEAD-TIME-PO TO WEEKS-LEAD-TIME-OUT IN
-           WS-PARTS-DATA-OUT.
-           EVALUATE VEHICLE-MAKE-PO
-                WHEN 'CHR' MOVE 'CHRYSLER' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'FOR' MOVE 'FORD' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'GM' MOVE 'GM' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'VW' MOVE 'VOLKSWAGEN' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'TOY' MOVE 'TOYOTA' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'JAG' MOVE 'JAGUAR' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'PEU' MOVE 'PEUGEOT' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-                WHEN 'BMW' MOVE 'BMW' TO VEHICLE-MAKE-OUT IN
-                WS-PARTS-DATA-OUT
-           END-EVALUATE.
-           MOVE SUPPLIER-NAME-PO TO SUPPLIER-NAME-OUT.
-           EVALUATE SUPPLIER-RATING-PO
-                WHEN '3' MOVE 'HIGHEST QUALITY' TO SUPPLIER-RATING-OUT
-                WHEN '2' MOVE 'AVERAGE QUALITY' TO SUPPLIER-RATING-OUT
-                WHEN '1' MOVE 'LOWEST QUALITY' TO SUPPLIER-RATING-OUT
-           END-EVALUATE.
       * Pending calculate Address and Purchase Information
+           PERFORM VARYING WS-LOOP-COUNTER
+           FROM 1 BY 1
+           UNTIL WS-LOOP-COUNTER > 3
+              DISPLAY SUPP-ADDRESS-OUT (WS-LOOP-COUNTER)
+              EVALUATE ADDRESS-TYPE-PO (WS-LOOP-COUNTER)
+                 WHEN '1'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-ORDER-ADDRESS
+                 WHEN '2'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-SCHED-ADDRESS
+                 WHEN '3'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-REMIT-ADDRESS
+              END-EVALUATE
+              ADD 1 TO WS-TOTAL-PURCH-ORDERS
+              ADD QUANTITY-PO (WS-LOOP-COUNTER)
+                 TO WS-TOTAL-QTY-IN-PURCH-ORDERS
+              COMPUTE WS-TOTAL-PRICE-PURCH-ORDERS =
+                 WS-TOTAL-PRICE-PURCH-ORDERS +
+                 (
+                      QUANTITY-PO (WS-LOOP-COUNTER) *
+                      UNIT-PRICE-PO (WS-LOOP-COUNTER)
+                 )
+           END-PERFORM.
 
-
-
-
+       220-WRITE-DATA.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
+           WRITE RPT-REC FROM WS-ADDRESSES-1.
+           WRITE RPT-REC FROM WS-ADDRESSES-2.
+           WRITE RPT-REC FROM WS-ADDRESSES-3 AFTER ADVANCING 2 LINES.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -375,7 +321,7 @@
                 GO TO 2000-ABEND-RTN
            END-IF.
 
-           OPEN OUTPUT PRINT-LINE.
+      *     OPEN OUTPUT PRINT-LINE.
 
 
 
@@ -391,52 +337,73 @@
                     PERFORM 2000-ABEND-RTN
                 END-IF
            END-READ.
+      *     DISPLAY PART-SUPP-ADDR-PO.
       * To count number of records readed from GOODDATAPIN file.
            IF (NOT GOODDATA-END-OF-FILE) THEN
               ADD +1 TO WS-IN-GOODDATA-CTR
            END-IF.
 
 
-       500-Write-ERRORFILE.
-      *    DISPLAY 'WRITE ERRORFILE: '.
-           WRITE ERRORFILE-REC FROM WS-PART-SUPP-ADDR-PO-OUT.
-           IF OUT-ERRORFILE-KEY NOT EQUAL ZERO THEN
-                DISPLAY 'Output ERRORfile writing problem'
-                PERFORM 2000-ABEND-RTN
-           END-IF.
-
        600-CLOSE-FILES.
       *     DISPLAY 'CLOSING FILES'.
-           CLOSE  GOODDATAIN, ERRORFILE, PRINT-LINE.
+           PERFORM 1000-WRITE-FOOTER.
+           CLOSE  GOODDATAIN, ERRORFILE, RPTFILE.
 
 
        2000-ABEND-RTN.
            DISPLAY 'PROGRAM ENCOUNTERED AN ERROR'.
            EXIT.
 
+       1000-WRITE-HEADER.
+           PERFORM 1000-WRITE-HEADER-DATA.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
+           WRITE RPT-REC FROM WS-HEADER.
+           WRITE RPT-REC FROM WS-UNDERLINE.
+           WRITE RPT-REC FROM WS-PARTS-DATA-OUT
+                 AFTER ADVANCING 1 LINE.
 
-       700-CONTROL-BREAK.
+       1000-WRITE-HEADER-DATA.
+           MOVE PART-NUMBER-PO TO PART-NUMBER-OUT IN WS-PARTS-DATA-OUT.
+           MOVE WEEKS-LEAD-TIME-PO TO WEEKS-LEAD-TIME-OUT IN
+           WS-PARTS-DATA-OUT.
+           EVALUATE VEHICLE-MAKE-PO
+                WHEN 'CHR' MOVE 'CHRYSLER' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'FOR' MOVE 'FORD' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'GM' MOVE 'GM' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'VW' MOVE 'VOLKSWAGEN' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'TOY' MOVE 'TOYOTA' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'JAG' MOVE 'JAGUAR' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'PEU' MOVE 'PEUGEOT' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'BMW' MOVE 'BMW' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+           END-EVALUATE.
+      * To get PartNumber, Weekslead time, vehicle make, Suppliers Name
+      * and SUPPLIER RATING
+           MOVE SUPPLIER-NAME-PO TO SUPPLIER-NAME-OUT.
+           EVALUATE SUPPLIER-RATING-PO
+                WHEN '3' MOVE 'HIGHEST QUALITY' TO SUPPLIER-RATING-OUT
+                WHEN '2' MOVE 'AVERAGE QUALITY' TO SUPPLIER-RATING-OUT
+                WHEN '1' MOVE 'LOWEST QUALITY' TO SUPPLIER-RATING-OUT
+           END-EVALUATE.
 
-           IF NOT GOODDATA-END-OF-FILE
-                THEN
-                    ADD +1 TO WS-LINE-KTR
 
-                    IF PART-NUMBER-PO IS NOT EQUAL TO WS-CONTROL-KEY
-                        THEN
-      * *> SET NEW CONTROL KEY
-                            MOVE PART-NUMBER-PO TO WS-CONTROL-KEY
-                            ADD +1 TO WS-PARTNUMBER-CTR
-                            WRITE PRINT-REC FROM WS-BLANK-LINE
-                            WRITE PRINT-REC FROM WS-HEADER
-                            WRITE PRINT-REC FROM WS-UNDERLINE
-                            PERFORM 150-INIT-WS-FIELDS
-                        ELSE
-                            WRITE PRINT-REC FROM WS-BLANK-LINE
-                            WRITE PRINT-REC FROM WS-HEADER
-                            WRITE PRINT-REC FROM WS-UNDERLINE
-                   END-IF
+       1000-WRITE-FOOTER.
+           PERFORM 1000-WRITE-FOOTER-DATA.
+           WRITE RPT-REC FROM WS-FOOTER-1.
+           WRITE RPT-REC FROM WS-FOOTER-2.
+           WRITE RPT-REC FROM WS-FOOTER-3.
 
-
-           END-IF.
-
-
+       1000-WRITE-FOOTER-DATA.
+           MOVE WS-TOTAL-PURCH-ORDERS
+             TO WS-TOTAL-PURCHASE-ORDER-O.
+           MOVE WS-TOTAL-QTY-IN-PURCH-ORDERS
+             TO WS-TOTAL-QTY-PURCH-ORDER-O.
+           MOVE WS-TOTAL-PRICE-PURCH-ORDERS
+             TO WS-TOTAL-PRICE-O.

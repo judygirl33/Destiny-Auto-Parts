@@ -1,0 +1,65 @@
+
+    Part Name               Weeks Lead Time     Vehicle Make     Supplier Name    Supplier Rating
+    ======================= ===============     ============     =============    ===============
+    00111-22222-33333-44444        003          CHRYSLER         SubContractor    HIGHEST QUALITY
+
+    Order Address: 1234 West Main , Order Dept.    ,                , AL  3599499999  Any Town
+    Sched Address: 1234 West Main , Sched Dept.    , Attn: Mary     , AL  3599499999  Any Town
+0   Remit Address: 1234 West Main , Remit Dept.    , Attn: Bob      , AL  3599499999  Any Town
+
+           Total # Purchase Orders: 003
+       Total Price Purchase Orders:          $1,077.36
+ Total Quantity in Purchase Orders: 0004
+
+    Part Name               Weeks Lead Time     Vehicle Make     Supplier Name    Supplier Rating
+    ======================= ===============     ============     =============    ===============
+    01011-33333-33333-55555        001          GM               Distributor      AVERAGE QUALITY
+
+    Order Address: 94 Grove Ave.  , Main Office    , Attn: Chris    , AL  3599499999  My  Town
+    Sched Address: 94 Grove Ave.  , Main Office    , Attn: Ted      , AL  3599499999  My  Town
+0   Remit Address: 94 Grove Ave.  , Main Office    , Attn: Susan    , AL  3599499999  My  Town
+
+           Total # Purchase Orders: 003
+       Total Price Purchase Orders:          $7,228.00
+ Total Quantity in Purchase Orders: 1325
+
+    Part Name               Weeks Lead Time     Vehicle Make     Supplier Name    Supplier Rating
+    ======================= ===============     ============     =============    ===============
+    11111-22222-33333-44444        003          CHRYSLER         SubContractor    HIGHEST QUALITY
+
+    Order Address: 1234 West Main , Order Dept.    ,                , AL  3599499999  Any Town
+    Sched Address: 1234 West Main , Sched Dept.    , Attn: Mary     , AL  3599499999  Any Town
+0   Remit Address: 1234 West Main , Remit Dept.    , Attn: Bob      , AL  3599499999  Any Town
+
+           Total # Purchase Orders: 003
+       Total Price Purchase Orders:          $1,077.36
+ Total Quantity in Purchase Orders: 0004
+
+    Part Name               Weeks Lead Time     Vehicle Make     Supplier Name    Supplier Rating
+    ======================= ===============     ============     =============    ===============
+    11111-33333-33333-55555        001          GM               Distributor      AVERAGE QUALITY
+
+    Order Address: 94 Grove Ave.  , Main Office    , Attn: Chris    , AL  3599499999  My  Town
+    Sched Address: 94 Grove Ave.  , Main Office    , Attn: Ted      , AL  3599499999  My  Town
+0   Remit Address: 94 Grove Ave.  , Main Office    , Attn: Susan    , AL  3599499999  My  Town
+
+           Total # Purchase Orders: 003
+       Total Price Purchase Orders:          $7,228.00
+ Total Quantity in Purchase Orders: 1325
+
+    Part Name               Weeks Lead Time     Vehicle Make     Supplier Name    Supplier Rating
+    ======================= ===============     ============     =============    ===============
+    11111-44444-33333-66666        002          VOLKSWAGEN       Manufacturer     LOWEST QUALITY
+
+    Order Address: 7986 Maple ST. ,                , Attn: Mike     , AL  3599499999  My  City
+    Sched Address: 7986 Maple ST. ,                , Attn: Mary     , AL  3599499999  My  City
+0   Remit Address: 7986 Maple ST. ,                , Attn: Matt     , AL  3599499999  My  City
+
+
+    Order Address: 7986 Maple ST. ,                , Attn: Mike     , AL  3599499999  My  City
+    Sched Address: 7986 Maple ST. ,                , Attn: Mary     , AL  3599499999  My  City
+0   Remit Address: 7986 Maple ST. ,                , Attn: Matt     , AL  3599499999  My  City
+
+           Total # Purchase Orders: 006
+       Total Price Purchase Orders:         $60,931.00
+ Total Quantity in Purchase Orders: 2420
