@@ -3,7 +3,7 @@
        AUTHOR IVANNA COLAN
       ******************************************************************
       * 9/26 Program to generate break out Report from the input file
-      *  GOODDATA, which contains only correct records of GOODDATA file
+      *  GOODDATA, which contains only correct records of PARTSUPP file
       * ******************************************
 
        ENVIRONMENT DIVISION.
@@ -13,12 +13,17 @@
            SELECT GOODDATAIN ASSIGN TO GOODDATA
            FILE STATUS IS IN-GOODDATA-KEY.
 
+      * Error File
+           SELECT ERRORFILE ASSIGN TO ERRFILE
+           FILE STATUS IS OUT-ERRORFILE-KEY.
+
+      * Output Control Break Report
+      *     SELECT PRINT-LINE ASSIGN TO PRTLINE.
+
+
            SELECT RPTFILE ASSIGN TO RPTFILE
            FILE STATUS IS REPORT-KEY.
 
-      * Output report
-           SELECT ERRORFILE ASSIGN TO ERRFILE
-           FILE STATUS IS OUT-ERRORFILE-KEY.
 
        DATA DIVISION.
        FILE SECTION.
@@ -33,9 +38,9 @@
 
        FD  RPTFILE
            RECORDING MODE IS F
-           RECORD CONTAINS 133 CHARACTERS
-           DATA RECORD IS RPT-Rec.
-       01  RPT-REC PIC X(133).
+           RECORD CONTAINS   132 CHARACTERS
+           DATA RECORD IS RPT-REC.
+       01  RPT-REC PIC X(132).
 
 
        FD  ERRORFILE
@@ -47,17 +52,13 @@
        01  ERRORFILE-REC PIC X(500).
 
 
-         01  PARTS-REC.
-           05  REC-PART-NUMBER       PIC X(23) VALUE SPACES.
-           05  REC-PART-NAME         PIC X(14) VALUE SPACES.
-           05  REC-SPEC-NUMBER       PIC X(07) VALUE SPACES.
-           05  REC-GOVT-COMML-CODE   PIC X(01) VALUE SPACES.
-           05  REC-BLUEPRINT-NUMBER  PIC X(10) VALUE SPACES.
-           05  REC-UNIT-OF-MEASURE   PIC X(03) VALUE SPACES.
-           05  REC-WEEKS-LEAD-TIME   PIC S9(04) COMP VALUE ZEROS.
-           05  REC-VEHICLE-MAKE      PIC X(03) VALUE SPACES.
-           05  REC-VEHICLE-MODEL     PIC X(05) VALUE SPACES.
-           05  REC-VEHICLE-YEAR      PIC X(04) VALUE '0000'.
+      *    FD  PRINT-LINE RECORDING MODE F
+      *        LABEL RECORDS ARE STANDARD
+      *        RECORD CONTAINS 132 CHARACTERS
+      *        BLOCK CONTAINS 0 RECORDS
+      *        DATA RECORD ISPRINT-REC.
+      *    01  PRINT-REC      PIC X(132).
+
 
        WORKING-STORAGE SECTION.
            COPY PARTS. *>Parts Copybook
@@ -85,7 +86,7 @@
 
        01 FILES-EOF.
            05 GOODDATAIN-EOF-WS               PIC X(01) VALUE 'N'.
-              88 PARTSUP-END-OF-FILE                    VALUE 'Y'.
+              88 GOODDATA-END-OF-FILE                    VALUE 'Y'.
 
 
 
@@ -153,6 +154,13 @@
 
 
        01 WS-ADDR-COUNTER                   PIC 9 VALUE 1.
+       01 WS-LOOP-COUNTER                   PIC 9 VALUE 1.
+
+       COPY OUTRPT.
+
+
+       01 WS-FLAGS.
+           05 WS-LINE-KTR               PIC 9(4) VALUE 0.
 
 
        PROCEDURE DIVISION.
@@ -165,27 +173,123 @@
 
        000-Housekeeping.
       * Initialization Routine
-           INITIALIZE PART-SUPP-ADDR-PO, WS-PART-SUPP-ADDR-PO-OUT.
-
+           INITIALIZE PART-SUPP-ADDR-PO,
+                      WS-PART-SUPP-ADDR-PO-OUT,
+                      WS-CONTROL-KEY.
       * Priming Read
            PERFORM 300-Open-Files.
+           MOVE SPACES TO RPT-REC.
            PERFORM 400-Read-GOODDATAIN.
+           PERFORM 1000-WRITE-HEADER.
+           PERFORM 150-INIT-WS-FIELDS.
+           MOVE PART-NUMBER-PO IN PART-SUPP-ADDR-PO
+               TO WS-CONTROL-KEY.
 
 
        100-Main2.
       *    DISPLAY '100-Main'.
-           PERFORM 200-PROCESS-DATA.
-           PERFORM 500-Write-ERRORFILE.
+           PERFORM 205-CONTROL-BREAK.
+           PERFORM 210-CALCULATE.
+           PERFORM 220-WRITE-DATA.
       * 9/18 Initializing counters before reading next record
       *S    INITIALIZE
            PERFORM 400-Read-GOODDATAIN.
 
 
-       200-PROCESS-DATA.
-           DISPLAY 'CREATE  REPORT'.
+       150-INIT-WS-FIELDS.
+           INITIALIZE WS-COUNTERS-AND-ACCUMULATORS.
+           INITIALIZE WS-ADDRESSES-1, WS-ADDRESSES-2, WS-ADDRESSES-3.
+           INITIALIZE WS-FOOTER-1, WS-FOOTER-2, WS-FOOTER-3.
+
+       205-CONTROL-BREAK.
+           IF WS-CONTROL-KEY NOT EQUAL
+              PART-NUMBER-PO THEN
+              PERFORM 1000-WRITE-FOOTER
+              PERFORM 1000-WRITE-HEADER
+              PERFORM 150-INIT-WS-FIELDS
+              MOVE PART-NUMBER-PO TO WS-CONTROL-KEY
+           END-IF.
 
 
+       210-CALCULATE.
+      * Pending calculate Address and Purchase Information
+           PERFORM VARYING WS-LOOP-COUNTER
+           FROM 1 BY 1
+           UNTIL WS-LOOP-COUNTER > 3
+              DISPLAY SUPP-ADDRESS-OUT (WS-LOOP-COUNTER)
+              EVALUATE ADDRESS-TYPE-PO (WS-LOOP-COUNTER)
+                 WHEN '1'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-ORDER-ADDRESS
+                 WHEN '2'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-SCHED-ADDRESS
+                 WHEN '3'
+                    STRING ADDRESS-1-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-2-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDRESS-3-PO (WS-LOOP-COUNTER)
+                                        DELIMITED BY SIZE
+                           ", "
+                           ADDR-STATE-PO (WS-LOOP-COUNTER)
+                                         DELIMITED BY SIZE
+                           "  "
+                           ZIP-CODE-PO (WS-LOOP-COUNTER)
+                           "  "
+                           CITY-PO (WS-LOOP-COUNTER)
+                                   DELIMITED BY SIZE
+                       INTO WS-REMIT-ADDRESS
+              END-EVALUATE
+              ADD 1 TO WS-TOTAL-PURCH-ORDERS
+              ADD QUANTITY-PO (WS-LOOP-COUNTER)
+                 TO WS-TOTAL-QTY-IN-PURCH-ORDERS
+              COMPUTE WS-TOTAL-PRICE-PURCH-ORDERS =
+                 WS-TOTAL-PRICE-PURCH-ORDERS +
+                 (
+                      QUANTITY-PO (WS-LOOP-COUNTER) *
+                      UNIT-PRICE-PO (WS-LOOP-COUNTER)
+                 )
+           END-PERFORM.
 
+       220-WRITE-DATA.
+      *     WRITE RPT-REC FROM WS-BLANK-LINE.
+           WRITE RPT-REC FROM WS-ADDRESSES-1.
+           WRITE RPT-REC FROM WS-ADDRESSES-2.
+           WRITE RPT-REC FROM WS-ADDRESSES-3.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
 
        300-Open-Files.
       *    DISPLAY '300-OPEN-FILES'.
@@ -217,6 +321,9 @@
                 GO TO 2000-ABEND-RTN
            END-IF.
 
+      *     OPEN OUTPUT PRINT-LINE.
+
+
 
 
        400-Read-GOODDATAIN.
@@ -230,25 +337,73 @@
                     PERFORM 2000-ABEND-RTN
                 END-IF
            END-READ.
+      *     DISPLAY PART-SUPP-ADDR-PO.
       * To count number of records readed from GOODDATAPIN file.
-           IF (NOT PARTSUP-END-OF-FILE) THEN
+           IF (NOT GOODDATA-END-OF-FILE) THEN
               ADD +1 TO WS-IN-GOODDATA-CTR
            END-IF.
 
 
-       500-Write-ERRORFILE.
-      *    DISPLAY 'WRITE ERRORFILE: '.
-           WRITE ERRORFILE-REC FROM WS-PART-SUPP-ADDR-PO-OUT.
-           IF OUT-ERRORFILE-KEY NOT EQUAL ZERO THEN
-                DISPLAY 'Output ERRORfile writing problem'
-                PERFORM 2000-ABEND-RTN
-           END-IF.
-
        600-CLOSE-FILES.
       *     DISPLAY 'CLOSING FILES'.
-           CLOSE  GOODDATAIN, ERRORFILE.
+           PERFORM 1000-WRITE-FOOTER.
+           CLOSE  GOODDATAIN, ERRORFILE, RPTFILE.
 
 
        2000-ABEND-RTN.
            DISPLAY 'PROGRAM ENCOUNTERED AN ERROR'.
            EXIT.
+
+       1000-WRITE-HEADER.
+           PERFORM 1000-WRITE-HEADER-DATA.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
+           WRITE RPT-REC FROM WS-HEADER.
+           WRITE RPT-REC FROM WS-UNDERLINE.
+           WRITE RPT-REC FROM WS-PARTS-DATA-OUT.
+           WRITE RPT-REC FROM WS-BLANK-LINE.
+
+       1000-WRITE-HEADER-DATA.
+           MOVE PART-NUMBER-PO TO PART-NUMBER-OUT IN WS-PARTS-DATA-OUT.
+           MOVE WEEKS-LEAD-TIME-PO TO WEEKS-LEAD-TIME-OUT IN
+           WS-PARTS-DATA-OUT.
+           EVALUATE VEHICLE-MAKE-PO
+                WHEN 'CHR' MOVE 'CHRYSLER' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'FOR' MOVE 'FORD' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'GM' MOVE 'GM' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'VW' MOVE 'VOLKSWAGEN' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'TOY' MOVE 'TOYOTA' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'JAG' MOVE 'JAGUAR' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'PEU' MOVE 'PEUGEOT' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+                WHEN 'BMW' MOVE 'BMW' TO VEHICLE-MAKE-OUT IN
+                WS-PARTS-DATA-OUT
+           END-EVALUATE.
+      * To get PartNumber, Weekslead time, vehicle make, Suppliers Name
+      * and SUPPLIER RATING
+           MOVE SUPPLIER-NAME-PO TO SUPPLIER-NAME-OUT.
+           EVALUATE SUPPLIER-RATING-PO
+                WHEN '3' MOVE 'HIGHEST QUALITY' TO SUPPLIER-RATING-OUT
+                WHEN '2' MOVE 'AVERAGE QUALITY' TO SUPPLIER-RATING-OUT
+                WHEN '1' MOVE 'LOWEST QUALITY' TO SUPPLIER-RATING-OUT
+           END-EVALUATE.
+
+
+       1000-WRITE-FOOTER.
+           PERFORM 1000-WRITE-FOOTER-DATA.
+           WRITE RPT-REC FROM WS-FOOTER-1.
+           WRITE RPT-REC FROM WS-FOOTER-2.
+           WRITE RPT-REC FROM WS-FOOTER-3.
+
+       1000-WRITE-FOOTER-DATA.
+           MOVE WS-TOTAL-PURCH-ORDERS
+             TO WS-TOTAL-PURCHASE-ORDER-O.
+           MOVE WS-TOTAL-QTY-IN-PURCH-ORDERS
+             TO WS-TOTAL-QTY-PURCH-ORDER-O.
+           MOVE WS-TOTAL-PRICE-PURCH-ORDERS
+             TO WS-TOTAL-PRICE-O.

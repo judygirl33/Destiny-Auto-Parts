@@ -24,10 +24,26 @@ zowe files ul ftds DATA/.data 'HLQ.FINALS.STATEZIP'
 zowe files ul ftds DATA/sample.data 'HLQ.FINALS.PARTSUPP' 
 ```
 
+# How to Build and Run
+
+1. Build the programs (can use the `COMPLINK` JCL provided for this)
+   1. Subprograms first
+      1. `ADDREDIT`
+      2. `POEDIT`
+      3. `SUPPEDIT`
+      4. `PARTEDIT`
+   2. `FINALEX`
+   3. `FINALRPT`
+2. Use `COBGO` to run all the needed steps
+   1. If you can't
+      1. Run First `FINALEX`, saving the output on GOODDATA dataset (LRECL 473)
+      2. `SORT` the GOODDATA dataset and save it on another dataset (LRECL 473)
+      3. Use the dataset from step 2 as input (DD GOODDATA) for `FINALRPT`
+
 # Subprograms Authors
 
 | Subprograms |  Author |
-|-:|:-:|
+|-:|:-:|   
 | Suppliers(SUPPEDIT ) | Guillermo |
 | SupAdress (ADREDIT  ) | Fabio | 
 | Purchase (POEDIT)  | Judy |
